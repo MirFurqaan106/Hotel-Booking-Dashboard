@@ -119,7 +119,7 @@ const Navbar = () => {
         {/* User Profile */}
         <div className="navbar-profile">
           <div className="profile-info">
-            <span className="profile-name">Alex Morgan</span>
+            <span className="profile-name">Mir Furqaan</span>
             <span className="profile-role">Admin Manager</span>
           </div>
           <div className="profile-avatar">

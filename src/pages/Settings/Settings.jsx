@@ -23,10 +23,10 @@ const Settings = () => {
 
   // Local State for Profile
   const [profile, setProfile] = useState({
-    name: 'Alex Morgan',
-    email: 'alex.morgan@horizonstay.com',
+    name: 'Mir Furqaan',
+    email: 'mirfurkaan106@gmail.com',
     role: 'Admin Manager',
-    phone: '+1 (555) 902-1254'
+    phone: '+91 94190 55555'
   });
 
   // Local State for Notification toggles

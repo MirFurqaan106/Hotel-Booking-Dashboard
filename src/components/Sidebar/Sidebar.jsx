@@ -44,8 +44,8 @@ const Sidebar = () => {
       <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''} ${mobileSidebarOpen ? 'mobile-open' : ''}`}>
         <div className="sidebar-brand">
           <div className="brand-logo">
-            <span className="logo-icon">H</span>
-            {!sidebarCollapsed && <span className="logo-text">Horizon<span className="logo-sub">Stay</span></span>}
+            <span className="logo-icon">P</span>
+            {!sidebarCollapsed && <span className="logo-text">Panun<span className="logo-sub"> Ghar</span></span>}
           </div>
           
           {/* Mobile Close Button */}

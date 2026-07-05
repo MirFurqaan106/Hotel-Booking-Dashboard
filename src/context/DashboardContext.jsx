@@ -12,6 +12,13 @@ export const useDashboard = () => {
 };
 
 export const DashboardProvider = ({ children }) => {
+  // Reactive bookings state
+  const [bookings, setBookings] = useState(bookingsData);
+
+  const addNewBooking = (newBooking) => {
+    setBookings((prev) => [newBooking, ...prev]);
+  };
+
   // Theme state: default to localStorage or dark if preferred
   const [theme, setTheme] = useState(() => {
     const saved = localStorage.getItem('dashboard-theme');
@@ -60,8 +67,8 @@ export const DashboardProvider = ({ children }) => {
 
   // Find dynamic max price from dataset
   const maxBookingPrice = useMemo(() => {
-    return Math.max(...bookingsData.map((b) => b.Revenue), 1000);
-  }, []);
+    return Math.max(...bookings.map((b) => b.Revenue), 1000);
+  }, [bookings]);
 
   // Update default price range once bookings are loaded
   useEffect(() => {
@@ -73,10 +80,10 @@ export const DashboardProvider = ({ children }) => {
 
   // Unique lists for filter options
   const filterOptions = useMemo(() => {
-    const countriesSet = new Set(bookingsData.map((b) => b.Country));
-    const roomTypesSet = new Set(bookingsData.map((b) => b.RoomType));
-    const statusesSet = new Set(bookingsData.map((b) => b.BookingStatus));
-    const paymentsSet = new Set(bookingsData.map((b) => b.PaymentStatus));
+    const countriesSet = new Set(bookings.map((b) => b.Country));
+    const roomTypesSet = new Set(bookings.map((b) => b.RoomType));
+    const statusesSet = new Set(bookings.map((b) => b.BookingStatus));
+    const paymentsSet = new Set(bookings.map((b) => b.PaymentStatus));
 
     return {
       countries: ['All', ...Array.from(countriesSet).sort()],
@@ -84,11 +91,11 @@ export const DashboardProvider = ({ children }) => {
       bookingStatuses: ['All', ...Array.from(statusesSet).sort()],
       paymentStatuses: ['All', ...Array.from(paymentsSet).sort()],
     };
-  }, []);
+  }, [bookings]);
 
   // Filter and Search logic
   const filteredBookings = useMemo(() => {
-    return bookingsData.filter((booking) => {
+    return bookings.filter((booking) => {
       // 1. Search Query filter (GuestName, BookingID, Country, RoomType)
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
@@ -156,7 +163,8 @@ export const DashboardProvider = ({ children }) => {
   };
 
   const value = {
-    allBookings: bookingsData,
+    allBookings: bookings,
+    addNewBooking,
     filteredBookings,
     filters,
     setFilters,

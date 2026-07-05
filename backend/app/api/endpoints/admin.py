@@ -14,7 +14,7 @@ router = APIRouter(prefix="/admin-portal", tags=["Admin Portal"])
 @router.get("/users", response_model=List[UserResponse])
 def list_all_users(
     db: Session = Depends(get_db),
-    current_user: User = Depends(RoleChecker(["Admin"]))
+    current_user: User = Depends(RoleChecker(["Manager", "Admin"]))
 ):
     # Returns all users except current admin user
     return db.query(User).filter(User.id != current_user.id).all()

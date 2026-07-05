@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useDashboard } from '../../context/DashboardContext';
 import Header from '../../components/Header/Header';
 import { FiSearch, FiMail, FiPhone, FiMapPin, FiAward, FiCalendar, FiDollarSign } from 'react-icons/fi';
+import api from '../../services/api';
 import './Customers.css';
 
 const Customers = () => {
@@ -9,36 +10,30 @@ const Customers = () => {
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loyaltyFilter, setLoyaltyFilter] = useState('All');
+  const [users, setUsers] = useState([]);
 
-  // 1. Process bookings data to aggregate customer metrics
-  const customers = useMemo(() => {
-    const customerMap = {};
-
-    allBookings.forEach((b) => {
-      const name = b.GuestName;
-      if (!customerMap[name]) {
-        // Generate mock email and phone based on name
-        const cleanName = name.toLowerCase().replace(/\s+/g, '.');
-        const email = `${cleanName}@example.com`;
-        const phone = `+1 (${100 + Math.floor(Math.random() * 899)}) 555-${1000 + Math.floor(Math.random() * 8999)}`;
-        
-        customerMap[name] = {
-          id: cleanName,
-          name: name,
-          email: email,
-          phone: phone,
-          country: b.Country,
-          gender: b.Gender,
-          age: b.Age,
-          bookings: []
-        };
+  // Fetch real users from SQLite
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const res = await api.get('/admin-portal/users');
+        setUsers(res.data);
+      } catch (err) {
+        console.error("Error loading users database:", err);
       }
-      customerMap[name].bookings.push(b);
-    });
+    };
+    loadUsers();
+  }, []);
 
-    return Object.values(customerMap).map((c) => {
-      const totalBookings = c.bookings.length;
-      const totalSpent = c.bookings.reduce((sum, b) => sum + b.Revenue, 0);
+  // 1. Process bookings data to aggregate customer metrics from live SQLite users
+  const customers = useMemo(() => {
+    // Only show guest customers
+    const guests = users.filter(u => u.role_name === 'User');
+    
+    return guests.map((u) => {
+      const guestBookings = allBookings.filter(b => b.GuestName === u.full_name);
+      const totalBookings = guestBookings.length;
+      const totalSpent = guestBookings.reduce((sum, b) => sum + b.Revenue, 0);
       
       // Determine loyalty tier based on number of bookings
       let loyaltyStatus = 'Regular';
@@ -47,13 +42,20 @@ const Customers = () => {
       else if (totalBookings === 2) loyaltyStatus = 'Silver';
 
       return {
-        ...c,
+        id: u.id.toString(),
+        name: u.full_name,
+        email: u.email,
+        phone: u.phone,
+        country: guestBookings[0]?.Country || "India",
+        gender: "Male",
+        age: 28,
+        bookings: guestBookings,
         totalBookings,
         totalSpent,
         loyaltyStatus
       };
     });
-  }, [allBookings]);
+  }, [users, allBookings]);
 
   // 2. Filter & Search Customers
   const filteredCustomers = useMemo(() => {

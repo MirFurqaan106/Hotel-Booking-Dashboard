@@ -22,7 +22,7 @@ def verify_auth_pipeline():
         "/auth/register",
         json={
             "email": "testguest@example.com",
-            "password": "GuestPassword123",
+            "password": "GuestPassword123!",
             "full_name": "Test Guest User",
             "phone": "+91 9900998877",
             "role_name": "User"
@@ -69,7 +69,7 @@ def verify_auth_pipeline():
         "/auth/login",
         data={
             "username": "testguest@example.com",
-            "password": "GuestPassword123"
+            "password": "GuestPassword123!"
         }
     )
     

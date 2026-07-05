@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 from datetime import datetime, date, timedelta
-from passlib.context import CryptContext
+import bcrypt
 
 # Set up path resolution to import from app
 sys.path.append(str(Path(__file__).resolve().parent))
@@ -9,11 +9,11 @@ sys.path.append(str(Path(__file__).resolve().parent))
 from app.database.session import engine, SessionLocal, Base
 from app.models.models import User, Hotel, Room, Booking, Payment, Invoice, Review, Coupon
 
-# Setup password encryptor
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    pwd_bytes = password.encode('utf-8')
+    salt = bcrypt.gensalt(rounds=12)
+    hashed = bcrypt.hashpw(pwd_bytes, salt)
+    return hashed.decode('utf-8')
 
 def seed_database():
     print("[Database Seed] Connecting to SQLite database...")

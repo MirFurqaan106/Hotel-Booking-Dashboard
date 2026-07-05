@@ -22,3 +22,21 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Python venv and caching
+venv/
+.venv/
+backend/venv/
+backend/.venv/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.pytest_cache/
+
+# Databases
+backend/*.db
+backend/*.sqlite
+*.db
+*.sqlite
+

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useDashboard } from '../../context/DashboardContext';
-import { FiStar, FiEdit, FiUser, FiCalendar, FiMessageSquare } from 'react-icons/fi';
+import { FiStar, FiEdit, FiUser, FiCalendar, FiMessageSquare, FiCheckCircle } from 'react-icons/fi';
 import './Reviews.css';
 
 const Reviews = () => {

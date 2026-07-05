@@ -9,8 +9,12 @@ class EmailService:
         print(f"\n==========================================")
         print(f"[Email Service] Preparing Mail Notification")
         print(f"To: {to_email}")
-        print(f"Subject: {subject}")
-        print(f"Body (Text Preview):\n{body_text or 'HTML email payload'}")
+        try:
+            print(f"Subject: {subject}")
+            print(f"Body (Text Preview):\n{body_text or 'HTML email payload'}")
+        except UnicodeEncodeError:
+            print(f"Subject: {subject.encode('ascii', 'replace').decode('ascii')}")
+            print(f"Body (Text Preview):\n{body_text.encode('ascii', 'replace').decode('ascii') if body_text else 'HTML email payload'}")
         print(f"==========================================\n")
         
         # If no SMTP credentials are provided, mock the success return

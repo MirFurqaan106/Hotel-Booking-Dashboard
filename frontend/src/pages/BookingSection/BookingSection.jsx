@@ -24,18 +24,10 @@ const BookingSection = () => {
   const [paymentOption, setPaymentOption] = useState('Later');
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Outcome states
+  // Outcome state
   const [bookingConfirmed, setBookingConfirmed] = useState(null);
-  const [showPayModal, setShowPayModal] = useState(false);
-
-  // Razorpay simulated states
-  const [payTab, setPayTab] = useState('card'); // card, upi
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardExpiry, setCardExpiry] = useState('');
-  const [cardCvv, setCardCvv] = useState('');
-  const [cardName, setCardName] = useState('');
-  const [upiId, setUpiId] = useState('');
-  const [payLoadingStep, setPayLoadingStep] = useState(''); // '', 'connecting', 'authorizing', 'complete'
+  const [paymentPendingBooking, setPaymentPendingBooking] = useState(null);
+  const [isProcessingPay, setIsProcessingPay] = useState(false);
 
   // Dynamic cost calculations
   const calculateNights = () => {
@@ -78,6 +70,18 @@ const BookingSection = () => {
     setErrorMsg('');
   };
 
+  // Dynamically load Razorpay standard Checkout script
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
@@ -88,6 +92,7 @@ const BookingSection = () => {
     }
 
     try {
+      // 1. Create a Pending Booking reservation in backend
       const res = await api.post('/bookings', {
         room_id: selectedRoom.id,
         check_in: checkIn,
@@ -96,59 +101,91 @@ const BookingSection = () => {
       });
 
       const newBooking = res.data;
-      setBookingConfirmed(newBooking);
 
       if (paymentOption === 'Later') {
+        setBookingConfirmed(newBooking);
         setSelectedRoom(null);
       } else {
-        setShowPayModal(true);
+        // Token or Full requires active payment gateway checkout
+        setPaymentPendingBooking(newBooking);
         setSelectedRoom(null);
+        triggerRazorpayCheckout(newBooking);
       }
     } catch (err) {
       setErrorMsg(err.response?.data?.detail || "Booking failed. Verify stay dates scheduling slots.");
     }
   };
 
-  const handleProceedPayment = async (e) => {
-    e.preventDefault();
-    
-    // Simulate Razorpay Gateway steps
-    setPayLoadingStep('connecting');
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setPayLoadingStep('authorizing');
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    setPayLoadingStep('complete');
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Call verify endpoint
+  const triggerRazorpayCheckout = async (pendingBooking) => {
+    setErrorMsg('');
+    setIsProcessingPay(true);
     try {
-      const payAmount = paymentOption === 'Token' ? tokenCost : totalCost;
-      await api.post('/payments/verify', {
-        booking_id: bookingConfirmed.id,
-        transaction_id: `txn_razorpay_${Date.now()}`,
-        amount: payAmount,
-        payment_status: 'Success'
-      });
-      
-      setBookingConfirmed(prev => ({
-        ...prev,
-        booking_status: 'Confirmed',
-        paid_amount: payAmount
-      }));
-      setShowPayModal(false);
-      setPayLoadingStep('');
-      
-      // Clear forms
-      setCardNumber('');
-      setCardExpiry('');
-      setCardCvv('');
-      setCardName('');
-      setUpiId('');
+      // 1. Load checkout.js
+      const isScriptLoaded = await loadRazorpayScript();
+      if (!isScriptLoaded) {
+        setErrorMsg("Failed to load Razorpay payment gateway SDK. Verify your network connection.");
+        setIsProcessingPay(false);
+        return;
+      }
+
+      // 2. Call backend to create Razorpay Order
+      const orderRes = await api.post(`/payments/create-order?booking_id=${pendingBooking.id}`);
+      const orderData = orderRes.data;
+
+      const chargeAmount = paymentOption === 'Token' ? tokenCost : totalCost;
+
+      // 3. Configure standard Razorpay checkout options overlay
+      const options = {
+        key: orderData.key_id,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "Panun Ghar Resort",
+        description: `Stay Advance: Room Reservation ${pendingBooking.booking_code}`,
+        order_id: orderData.order_id,
+        handler: async function (response) {
+          setIsProcessingPay(true);
+          try {
+            // Verify payment signature securely on FastAPI backend
+            await api.post('/payments/verify-signature', {
+              booking_id: pendingBooking.id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature
+            });
+
+            // If signature verification succeeded, show confirmation
+            setBookingConfirmed({
+              ...pendingBooking,
+              booking_status: 'Confirmed',
+              paid_amount: chargeAmount
+            });
+            setPaymentPendingBooking(null);
+          } catch (err) {
+            setErrorMsg(err.response?.data?.detail || "Payment verification failed. Please contact support.");
+          } finally {
+            setIsProcessingPay(false);
+          }
+        },
+        prefill: {
+          name: localStorage.getItem('user_name') || "Resort Guest",
+          email: localStorage.getItem('user_email') || "guest@panunghar.com"
+        },
+        theme: {
+          color: "#2563eb"
+        },
+        modal: {
+          ondismiss: function () {
+            setErrorMsg("Payment checkout cancelled. You can complete the payment later from your Dashboard.");
+            setIsProcessingPay(false);
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (err) {
-      console.error("Payment verify failed:", err);
-      setPayLoadingStep('');
+      setErrorMsg(err.response?.data?.detail || "Error initializing payment with Razorpay. Try again.");
+      setIsProcessingPay(false);
     }
   };
 
@@ -280,130 +317,21 @@ const BookingSection = () => {
         </div>
       )}
 
-      {/* Razorpay simulation */}
-      {showPayModal && bookingConfirmed && (
-        <div className="modal-backdrop">
-          <div className="razorpay-simulation-modal card glass-panel animate-fade-in">
-            {payLoadingStep ? (
-              <div className="rzp-loading-overlay">
-                <div className="rzp-spinner"></div>
-                {payLoadingStep === 'connecting' && <p>Connecting to Razorpay secure payment gateway...</p>}
-                {payLoadingStep === 'authorizing' && <p>Authorizing transaction with bank authentication servers...</p>}
-                {payLoadingStep === 'complete' && <p className="text-success" style={{ fontWeight: 700 }}>Payment Captured Successfully!</p>}
-              </div>
-            ) : (
-              <>
-                <div className="rzp-header">
-                  <div className="rzp-brand-row">
-                    <span className="rzp-logo-badge">R</span>
-                    <span className="rzp-title-brand">Razorpay Secure Checkout</span>
-                  </div>
-                  <div className="rzp-meta">
-                    <p>Reference: <strong>{bookingConfirmed.booking_code}</strong></p>
-                    <p className="rzp-amt-label">Amount: <strong className="text-primary">₹{paymentOption === 'Token' ? tokenCost : totalCost}</strong></p>
-                  </div>
-                </div>
-
-                <div className="rzp-tabs">
-                  <button 
-                    type="button" 
-                    className={`rzp-tab-btn ${payTab === 'card' ? 'active' : ''}`} 
-                    onClick={() => setPayTab('card')}
-                  >
-                    Credit / Debit Card
-                  </button>
-                  <button 
-                    type="button" 
-                    className={`rzp-tab-btn ${payTab === 'upi' ? 'active' : ''}`} 
-                    onClick={() => setPayTab('upi')}
-                  >
-                    UPI / QR Code
-                  </button>
-                </div>
-
-                <form onSubmit={handleProceedPayment} className="rzp-payment-form">
-                  {payTab === 'card' ? (
-                    <div className="rzp-card-fields">
-                      <div className="rzp-grp">
-                        <label>Card Number</label>
-                        <input 
-                          type="text" 
-                          placeholder="4111 2222 3333 4444" 
-                          maxLength={19} 
-                          value={cardNumber} 
-                          onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, '').replace(/(\d{4})/g, '$1 ').trim())} 
-                          required 
-                        />
-                      </div>
-                      <div className="rzp-row">
-                        <div className="rzp-grp">
-                          <label>Expiry (MM/YY)</label>
-                          <input 
-                            type="text" 
-                            placeholder="12/28" 
-                            maxLength={5} 
-                            value={cardExpiry} 
-                            onChange={(e) => setCardExpiry(e.target.value)} 
-                            required 
-                          />
-                        </div>
-                        <div className="rzp-grp">
-                          <label>CVV</label>
-                          <input 
-                            type="password" 
-                            placeholder="•••" 
-                            maxLength={3} 
-                            value={cardCvv} 
-                            onChange={(e) => setCardCvv(e.target.value)} 
-                            required 
-                          />
-                        </div>
-                      </div>
-                      <div className="rzp-grp">
-                        <label>Cardholder Name</label>
-                        <input 
-                          type="text" 
-                          placeholder="Mir Furqaan" 
-                          value={cardName} 
-                          onChange={(e) => setCardName(e.target.value)} 
-                          required 
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="rzp-upi-fields">
-                      <div className="rzp-grp">
-                        <label>Virtual UPI ID (VPA)</label>
-                        <input 
-                          type="text" 
-                          placeholder="mirfurkaan@okaxis" 
-                          value={upiId} 
-                          onChange={(e) => setUpiId(e.target.value)} 
-                          required 
-                        />
-                      </div>
-                      <div className="rzp-qr-mock">
-                        <div className="qr-visual">[ Simulated UPI QR Code ]</div>
-                        <span>Scan the mock gateway QR via any banking application</span>
-                      </div>
-                    </div>
-                  )}
-
-                  <button type="submit" className="rzp-submit-pay-btn">
-                    Proceed to Pay ₹{paymentOption === 'Token' ? tokenCost : totalCost}
-                  </button>
-                  <button type="button" className="rzp-cancel-btn" onClick={() => { setShowPayModal(false); setSelectedRoom(null); }}>
-                    Cancel Checkout
-                  </button>
-                </form>
-              </>
-            )}
+      {/* Loading overlay for payment processing */}
+      {isProcessingPay && (
+        <div className="modal-backdrop" style={{ zIndex: 10000 }}>
+          <div className="card glass-panel flex-center" style={{ padding: '3rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', textAlign: 'center' }}>
+            <div className="rzp-spinner"></div>
+            <h3 style={{ margin: 0 }}>Processing Payment Securely</h3>
+            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+              Please do not refresh this page or close the payment window.
+            </p>
           </div>
         </div>
       )}
 
       {/* Success Modal */}
-      {bookingConfirmed && !showPayModal && (
+      {bookingConfirmed && (
         <div className="modal-backdrop">
           <div className="success-modal card glass-panel animate-fade-in">
             <div className="success-icon-header">

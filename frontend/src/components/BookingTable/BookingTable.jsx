@@ -101,7 +101,7 @@ const BookingTable = () => {
   const downloadCSV = () => {
     const headers = [
       'Booking ID', 'Guest Name', 'Room Type', 'Room Number', 'Check-In', 
-      'Check-Out', 'Status', 'Payment Status', 'Payment Method', 'Amount ($)', 'Country'
+      'Check-Out', 'Status', 'Payment Status', 'Payment Method', 'Amount (₹)', 'Country'
     ];
     
     const rows = filteredBookings.map(b => [
@@ -205,7 +205,7 @@ const BookingTable = () => {
                   <td>{b.CheckOut}</td>
                   <td>{getStatusBadge(b.BookingStatus)}</td>
                   <td>{getPaymentBadge(b.PaymentStatus)}</td>
-                  <td className="revenue-cell">${b.Revenue}</td>
+                  <td className="revenue-cell">₹{b.Revenue}</td>
                   <td>
                     <span className="country-badge">{b.Country}</span>
                   </td>

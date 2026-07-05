@@ -136,7 +136,7 @@ const Revenue = () => {
               <FiDollarSign size={20} />
             </div>
           </div>
-          <h3>${metrics.totalRevenue.toLocaleString()}</h3>
+          <h3>₹{metrics.totalRevenue.toLocaleString()}</h3>
           <p className="kpi-desc-sub"><span className="trend-up">+{metrics.growth}%</span> since last month</p>
         </div>
 
@@ -147,7 +147,7 @@ const Revenue = () => {
               <FiActivity size={20} />
             </div>
           </div>
-          <h3>${metrics.avgValue.toLocaleString()}</h3>
+          <h3>₹{metrics.avgValue.toLocaleString()}</h3>
           <p className="kpi-desc-sub">Avg transaction size per stay</p>
         </div>
 
@@ -158,7 +158,7 @@ const Revenue = () => {
               <FiTrendingUp size={20} />
             </div>
           </div>
-          <h3>${metrics.profit.toLocaleString()}</h3>
+          <h3>₹{metrics.profit.toLocaleString()}</h3>
           <p className="kpi-desc-sub">72% profit margin projection</p>
         </div>
 
@@ -197,8 +197,8 @@ const Revenue = () => {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
                 <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
-                <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} tickFormatter={(val) => `$${val/1000}k`} />
-                <Tooltip formatter={(val) => `$${val.toLocaleString()}`} />
+                <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} tickFormatter={(val) => `₹${val/1000}k`} />
+                <Tooltip formatter={(val) => `₹${val.toLocaleString()}`} />
                 <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
                 <Area type="monotone" dataKey="Revenue" stroke="#2563eb" strokeWidth={2} fillOpacity={1} fill="url(#colorRev)" name="Revenue" />
                 <Area type="monotone" dataKey="Profit" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorProf)" name="Profit" />
@@ -229,7 +229,7 @@ const Revenue = () => {
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(val) => `$${val.toLocaleString()}`} />
+                <Tooltip formatter={(val) => `₹${val.toLocaleString()}`} />
                 <Legend layout="horizontal" align="center" verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
               </PieChart>
             </ResponsiveContainer>
@@ -247,8 +247,8 @@ const Revenue = () => {
               <BarChart data={averageBookingValueTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
                 <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
-                <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} tickFormatter={(val) => `$${val}`} />
-                <Tooltip formatter={(val) => `$${val}`} />
+                <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} tickFormatter={(val) => `₹${val}`} />
+                <Tooltip formatter={(val) => `₹${val}`} />
                 <Bar dataKey="AverageValue" fill="#8b5cf6" radius={[4, 4, 0, 0]} name="Avg Stay Ticket" />
               </BarChart>
             </ResponsiveContainer>

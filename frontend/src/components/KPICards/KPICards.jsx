@@ -69,7 +69,7 @@ const KPICards = () => {
     },
     {
       title: 'Total Revenue',
-      value: `$${totalRevenue.toLocaleString()}`,
+      value: `₹${totalRevenue.toLocaleString()}`,
       icon: FiDollarSign,
       color: 'success',
       desc: 'Sum of stays & fees'

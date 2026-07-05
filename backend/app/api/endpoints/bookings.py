@@ -75,7 +75,7 @@ def create_booking(
     if booking_in.payment_option == "Later":
         initial_status = "Confirmed"
     elif booking_in.payment_option == "Token":
-        paid_amount = 100 # Flat token rate
+        paid_amount = int(total_amount * 0.20) # Dynamic 20% token rate
         initial_status = "Pending" # Becomes Confirmed on payment success
     elif booking_in.payment_option == "Full":
         paid_amount = total_amount

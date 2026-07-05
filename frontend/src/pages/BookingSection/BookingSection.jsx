@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FiCalendar, 
-  FiDollarSign, 
   FiCheckCircle, 
   FiX, 
   FiMail, 
@@ -28,6 +27,29 @@ const BookingSection = () => {
   // Outcome states
   const [bookingConfirmed, setBookingConfirmed] = useState(null);
   const [showPayModal, setShowPayModal] = useState(false);
+
+  // Razorpay simulated states
+  const [payTab, setPayTab] = useState('card'); // card, upi
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
+  const [cardName, setCardName] = useState('');
+  const [upiId, setUpiId] = useState('');
+  const [payLoadingStep, setPayLoadingStep] = useState(''); // '', 'connecting', 'authorizing', 'complete'
+
+  // Dynamic cost calculations
+  const calculateNights = () => {
+    if (!checkIn || !checkOut) return 0;
+    const start = new Date(checkIn);
+    const end = new Date(checkOut);
+    const diffTime = end - start;
+    if (diffTime <= 0) return 0;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  const nightsCount = calculateNights();
+  const totalCost = selectedRoom ? nightsCount * selectedRoom.price_per_night : 0;
+  const tokenCost = Math.ceil(totalCost * 0.20);
 
   const fetchRooms = async () => {
     setLoading(true);
@@ -59,6 +81,12 @@ const BookingSection = () => {
   const handleBookingSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
+    
+    if (nightsCount <= 0) {
+      setErrorMsg("Check-Out date must be after Check-In date.");
+      return;
+    }
+
     try {
       const res = await api.post('/bookings', {
         room_id: selectedRoom.id,
@@ -81,9 +109,22 @@ const BookingSection = () => {
     }
   };
 
-  const handlePaymentVerify = async () => {
+  const handleProceedPayment = async (e) => {
+    e.preventDefault();
+    
+    // Simulate Razorpay Gateway steps
+    setPayLoadingStep('connecting');
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    setPayLoadingStep('authorizing');
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    setPayLoadingStep('complete');
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Call verify endpoint
     try {
-      const payAmount = paymentOption === 'Token' ? 100 : bookingConfirmed.total_amount;
+      const payAmount = paymentOption === 'Token' ? tokenCost : totalCost;
       await api.post('/payments/verify', {
         booking_id: bookingConfirmed.id,
         transaction_id: `txn_razorpay_${Date.now()}`,
@@ -97,8 +138,17 @@ const BookingSection = () => {
         paid_amount: payAmount
       }));
       setShowPayModal(false);
+      setPayLoadingStep('');
+      
+      // Clear forms
+      setCardNumber('');
+      setCardExpiry('');
+      setCardCvv('');
+      setCardName('');
+      setUpiId('');
     } catch (err) {
       console.error("Payment verify failed:", err);
+      setPayLoadingStep('');
     }
   };
 
@@ -110,7 +160,7 @@ const BookingSection = () => {
       `A guest has placed a stay booking at Panun Ghar:\n\n` +
       `- Ref ID: ${bookingConfirmed.booking_code}\n` +
       `- Scheduled: ${bookingConfirmed.check_in} to ${bookingConfirmed.check_out}\n` +
-      `- Paid Amount: $${bookingConfirmed.paid_amount}\n` +
+      `- Paid Amount: ₹${bookingConfirmed.paid_amount}\n` +
       `System Email: mirfurkaan106@gmail.com`
     );
     window.location.href = `mailto:mirfurkaan106@gmail.com?subject=${subject}&body=${body}`;
@@ -122,7 +172,7 @@ const BookingSection = () => {
       `*Panun Ghar Resort Stay*\n` +
       `• *Booking ID*: ${bookingConfirmed.booking_code}\n` +
       `• *Dates*: ${bookingConfirmed.check_in} to ${bookingConfirmed.check_out}\n` +
-      `• *Paid Amount*: $${bookingConfirmed.paid_amount}`
+      `• *Paid Amount*: ₹${bookingConfirmed.paid_amount}`
     );
     window.open(`https://wa.me/917889984798?text=${message}`, '_blank');
   };
@@ -148,7 +198,7 @@ const BookingSection = () => {
               
               <div className="suite-footer">
                 <div className="suite-price">
-                  <strong>${room.price_per_night}</strong>
+                  <strong>₹{room.price_per_night}</strong>
                   <span>/ Night</span>
                 </div>
                 <button 
@@ -203,15 +253,22 @@ const BookingSection = () => {
                 </div>
               </div>
 
+              {nightsCount > 0 && (
+                <div className="stay-summary-box">
+                  <p>Stay Duration: <strong>{nightsCount} Nights</strong></p>
+                  <p>Total Stay Cost: <strong>₹{totalCost}</strong></p>
+                </div>
+              )}
+
               <div className="grp">
                 <label>Payment Mode</label>
                 <select 
                   value={paymentOption}
                   onChange={(e) => setPaymentOption(e.target.value)}
                 >
-                  <option value="Later">Pay Later during Check-In ($0 now)</option>
-                  <option value="Token">Pay Token advance ($100 now)</option>
-                  <option value="Full">Pay Full amount now</option>
+                  <option value="Later">Pay Later during Check-In (₹0 now)</option>
+                  <option value="Token">Pay Token advance (₹{nightsCount > 0 ? tokenCost : '20%'} now)</option>
+                  <option value="Full">Pay Full amount (₹{nightsCount > 0 ? totalCost : ''} now)</option>
                 </select>
               </div>
 
@@ -227,17 +284,120 @@ const BookingSection = () => {
       {showPayModal && bookingConfirmed && (
         <div className="modal-backdrop">
           <div className="razorpay-simulation-modal card glass-panel animate-fade-in">
-            <div className="rzp-header">
-              <span className="rzp-badge">Razorpay Secure Checkout</span>
-              <h3>Verify simulated gateway transaction</h3>
-              <p>Reference: <strong>{bookingConfirmed.booking_code}</strong></p>
-            </div>
-            <div className="rzp-details">
-              <p>Amount to Charge: <strong>${paymentOption === 'Token' ? 100 : bookingConfirmed.total_amount}</strong></p>
-            </div>
-            <button className="rzp-pay-success-btn" onClick={handlePaymentVerify}>
-              Simulate Successful Payment Verified Check
-            </button>
+            {payLoadingStep ? (
+              <div className="rzp-loading-overlay">
+                <div className="rzp-spinner"></div>
+                {payLoadingStep === 'connecting' && <p>Connecting to Razorpay secure payment gateway...</p>}
+                {payLoadingStep === 'authorizing' && <p>Authorizing transaction with bank authentication servers...</p>}
+                {payLoadingStep === 'complete' && <p className="text-success" style={{ fontWeight: 700 }}>Payment Captured Successfully!</p>}
+              </div>
+            ) : (
+              <>
+                <div className="rzp-header">
+                  <div className="rzp-brand-row">
+                    <span className="rzp-logo-badge">R</span>
+                    <span className="rzp-title-brand">Razorpay Secure Checkout</span>
+                  </div>
+                  <div className="rzp-meta">
+                    <p>Reference: <strong>{bookingConfirmed.booking_code}</strong></p>
+                    <p className="rzp-amt-label">Amount: <strong className="text-primary">₹{paymentOption === 'Token' ? tokenCost : totalCost}</strong></p>
+                  </div>
+                </div>
+
+                <div className="rzp-tabs">
+                  <button 
+                    type="button" 
+                    className={`rzp-tab-btn ${payTab === 'card' ? 'active' : ''}`} 
+                    onClick={() => setPayTab('card')}
+                  >
+                    Credit / Debit Card
+                  </button>
+                  <button 
+                    type="button" 
+                    className={`rzp-tab-btn ${payTab === 'upi' ? 'active' : ''}`} 
+                    onClick={() => setPayTab('upi')}
+                  >
+                    UPI / QR Code
+                  </button>
+                </div>
+
+                <form onSubmit={handleProceedPayment} className="rzp-payment-form">
+                  {payTab === 'card' ? (
+                    <div className="rzp-card-fields">
+                      <div className="rzp-grp">
+                        <label>Card Number</label>
+                        <input 
+                          type="text" 
+                          placeholder="4111 2222 3333 4444" 
+                          maxLength={19} 
+                          value={cardNumber} 
+                          onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, '').replace(/(\d{4})/g, '$1 ').trim())} 
+                          required 
+                        />
+                      </div>
+                      <div className="rzp-row">
+                        <div className="rzp-grp">
+                          <label>Expiry (MM/YY)</label>
+                          <input 
+                            type="text" 
+                            placeholder="12/28" 
+                            maxLength={5} 
+                            value={cardExpiry} 
+                            onChange={(e) => setCardExpiry(e.target.value)} 
+                            required 
+                          />
+                        </div>
+                        <div className="rzp-grp">
+                          <label>CVV</label>
+                          <input 
+                            type="password" 
+                            placeholder="•••" 
+                            maxLength={3} 
+                            value={cardCvv} 
+                            onChange={(e) => setCardCvv(e.target.value)} 
+                            required 
+                          />
+                        </div>
+                      </div>
+                      <div className="rzp-grp">
+                        <label>Cardholder Name</label>
+                        <input 
+                          type="text" 
+                          placeholder="Mir Furqaan" 
+                          value={cardName} 
+                          onChange={(e) => setCardName(e.target.value)} 
+                          required 
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rzp-upi-fields">
+                      <div className="rzp-grp">
+                        <label>Virtual UPI ID (VPA)</label>
+                        <input 
+                          type="text" 
+                          placeholder="mirfurkaan@okaxis" 
+                          value={upiId} 
+                          onChange={(e) => setUpiId(e.target.value)} 
+                          required 
+                        />
+                      </div>
+                      <div className="rzp-qr-mock">
+                        <div className="qr-visual">[ Simulated UPI QR Code ]</div>
+                        <span>Scan the mock gateway QR via any banking application</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <button type="submit" className="rzp-submit-pay-btn">
+                    Proceed to Pay ₹{paymentOption === 'Token' ? tokenCost : totalCost}
+                  </button>
+                  <button type="button" className="rzp-cancel-btn" onClick={() => { setShowPayModal(false); setSelectedRoom(null); }}>
+                    Cancel Checkout
+                  </button>
+                </form>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -254,8 +414,8 @@ const BookingSection = () => {
 
             <div className="success-details-box">
               <p>Stay Schedule: <strong>{bookingConfirmed.check_in} to {bookingConfirmed.check_out}</strong></p>
-              <p>Total Stay Cost: <strong>${bookingConfirmed.total_amount}</strong></p>
-              <p>Amount Paid: <strong>${bookingConfirmed.paid_amount}</strong></p>
+              <p>Total Stay Cost: <strong>₹{bookingConfirmed.total_amount}</strong></p>
+              <p>Amount Paid: <strong>₹{bookingConfirmed.paid_amount}</strong></p>
               <p>Booking Status: <strong>{bookingConfirmed.booking_status}</strong></p>
             </div>
 

@@ -93,7 +93,7 @@ def verify_business_logic():
         json={
             "booking_id": booking_id,
             "transaction_id": "txn_razorpay_9988776655",
-            "amount": 100,
+            "amount": 3500,
             "payment_status": "Success"
         },
         headers=headers

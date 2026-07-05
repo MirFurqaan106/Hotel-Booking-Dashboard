@@ -111,15 +111,15 @@ const UserDashboard = () => {
           <hr />
           <div class="item">
             <span>Room Reservation Fee</span>
-            <span>$${booking.total_amount}</span>
+            <span>₹{booking.total_amount}</span>
           </div>
           <div class="item">
             <span>Amount Paid</span>
-            <span>$${booking.paid_amount}</span>
+            <span>₹{booking.paid_amount}</span>
           </div>
           <div class="item" style="font-weight: bold; font-size: 1.1em;">
             <span>Outstanding Balance</span>
-            <span>$${booking.total_amount - booking.paid_amount}</span>
+            <span>₹{booking.total_amount - booking.paid_amount}</span>
           </div>
           <div class="footer">
             <p>Thank you for choosing Panun Ghar, Kashmir.</p>
@@ -200,7 +200,7 @@ const UserDashboard = () => {
                       
                       <div className="book-card-body-details">
                         <p>Dates: <strong>{booking.check_in} to {booking.check_out}</strong></p>
-                        <p>Options: <strong>{booking.payment_option} Option</strong> | Charged: <strong>${booking.total_amount}</strong> (Paid: <strong>${booking.paid_amount}</strong>)</p>
+                        <p>Options: <strong>{booking.payment_option} Option</strong> | Charged: <strong>₹{booking.total_amount}</strong> (Paid: <strong>₹{booking.paid_amount}</strong>)</p>
                       </div>
 
                       <div className="book-card-actions">
@@ -248,26 +248,26 @@ const UserDashboard = () => {
                 <table className="dash-table">
                   <thead>
                     <tr>
+                      <th>Date</th>
                       <th>Transaction ID</th>
-                      <th>Amount ($)</th>
                       <th>Gateway</th>
+                      <th>Amount (₹)</th>
                       <th>Status</th>
-                      <th>Timestamp</th>
                     </tr>
                   </thead>
                   <tbody>
                     {payments.length > 0 ? (
                       payments.map((p) => (
                         <tr key={p.id}>
+                          <td>{new Date(p.created_at).toLocaleDateString()}</td>
                           <td style={{ fontFamily: 'monospace' }}>{p.transaction_id}</td>
-                          <td><strong>${p.amount}</strong></td>
                           <td>{p.gateway}</td>
+                          <td><strong>₹{p.amount}</strong></td>
                           <td>
                             <span className={`status-badge-val ${p.payment_status.toLowerCase()}`}>
                               {p.payment_status}
                             </span>
                           </td>
-                          <td>{new Date(p.created_at).toLocaleDateString()}</td>
                         </tr>
                       ))
                     ) : (

@@ -125,7 +125,7 @@ const Filters = () => {
 
         {/* Price Range */}
         <div className="filter-item price-range-item">
-          <label>Price Range ($)</label>
+          <label>Price Range (₹)</label>
           <div className="price-inputs">
             <input 
               type="number" 

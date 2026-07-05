@@ -88,13 +88,13 @@ def seed_database():
         
         # 3. Create Default Rooms
         rooms_list = [
-            Room(hotel_id=hotel.id, room_type="Single Room", room_number=101, price_per_night=90, is_available=True),
-            Room(hotel_id=hotel.id, room_type="Single Room", room_number=102, price_per_night=90, is_available=True),
-            Room(hotel_id=hotel.id, room_type="Double Room", room_number=201, price_per_night=140, is_available=True),
-            Room(hotel_id=hotel.id, room_type="Double Room", room_number=202, price_per_night=140, is_available=True),
-            Room(hotel_id=hotel.id, room_type="Deluxe Suite", room_number=301, price_per_night=240, is_available=True),
-            Room(hotel_id=hotel.id, room_type="Deluxe Suite", room_number=302, price_per_night=240, is_available=True),
-            Room(hotel_id=hotel.id, room_type="President Suite", room_number=501, price_per_night=550, is_available=True)
+            Room(hotel_id=hotel.id, room_type="Single Room", room_number=101, price_per_night=3500, is_available=True),
+            Room(hotel_id=hotel.id, room_type="Single Room", room_number=102, price_per_night=3500, is_available=True),
+            Room(hotel_id=hotel.id, room_type="Double Room", room_number=201, price_per_night=5500, is_available=True),
+            Room(hotel_id=hotel.id, room_type="Double Room", room_number=202, price_per_night=5500, is_available=True),
+            Room(hotel_id=hotel.id, room_type="Deluxe Suite", room_number=301, price_per_night=8500, is_available=True),
+            Room(hotel_id=hotel.id, room_type="Deluxe Suite", room_number=302, price_per_night=8500, is_available=True),
+            Room(hotel_id=hotel.id, room_type="President Suite", room_number=501, price_per_night=15000, is_available=True)
         ]
         for r in rooms_list:
             db.add(r)
@@ -128,8 +128,8 @@ def seed_database():
             check_in=date.today() - timedelta(days=7),
             check_out=date.today() - timedelta(days=3),
             booking_status="Checked Out",
-            total_amount=960, # 4 nights * 240
-            paid_amount=960,
+            total_amount=34000, # 4 nights * 8500 INR
+            paid_amount=34000,
             payment_option="Full"
         )
         db.add(booking_checkout)
@@ -139,7 +139,7 @@ def seed_database():
         pay_checkout = Payment(
             booking_id=booking_checkout.id,
             transaction_id="pay_checkout_123456",
-            amount=960,
+            amount=34000,
             payment_status="Success",
             gateway="Razorpay"
         )
@@ -169,8 +169,8 @@ def seed_database():
             check_in=date.today() + timedelta(days=2),
             check_out=date.today() + timedelta(days=5),
             booking_status="Confirmed",
-            total_amount=1650, # 3 nights * 550
-            paid_amount=100, # Token amount pay
+            total_amount=45000, # 3 nights * 15000 INR
+            paid_amount=9000, # Dynamic 20% token payment
             payment_option="Token"
         )
         db.add(booking_confirmed)
@@ -179,7 +179,7 @@ def seed_database():
         pay_confirmed = Payment(
             booking_id=booking_confirmed.id,
             transaction_id="pay_token_654321",
-            amount=100,
+            amount=9000,
             payment_status="Success",
             gateway="Razorpay"
         )

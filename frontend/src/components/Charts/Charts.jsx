@@ -117,8 +117,8 @@ export const RevenueTrendChart = () => {
           </defs>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-color)" />
           <XAxis dataKey="month" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} />
-          <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} tickFormatter={(val) => `$${val/1000}k`} />
-          <Tooltip content={<CustomTooltip formatter={(val) => `$${val.toLocaleString()}`} />} />
+          <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} tickFormatter={(val) => `₹${val/1000}k`} />
+          <Tooltip content={<CustomTooltip formatter={(val) => `₹${val.toLocaleString()}`} />} />
           <Area type="monotone" dataKey="Revenue" stroke={COLORS.success} strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" name="Revenue" />
         </AreaChart>
       </ResponsiveContainer>

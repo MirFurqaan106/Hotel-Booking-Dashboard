@@ -144,7 +144,7 @@ const Rooms = () => {
             {/* Visual Cover Gradients representing room types */}
             <div className={`room-cover cover-${room.roomType.toLowerCase().replace(/\s+/g, '-')}`}>
               <span className="room-badge-num">Room {room.roomNumber}</span>
-              <span className="room-price-night">${room.price} <span className="night-text">/ night</span></span>
+              <span className="room-price-night">₹{room.price} <span className="night-text">/ night</span></span>
             </div>
 
             <div className="room-body">

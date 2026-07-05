@@ -23,12 +23,12 @@ const Sidebar = () => {
   } = useDashboard();
 
   const navigationItems = [
-    { name: 'Dashboard', path: '/', icon: FiHome },
-    { name: 'Bookings', path: '/bookings', icon: FiCalendar },
-    { name: 'Customers', path: '/customers', icon: FiUsers },
-    { name: 'Rooms', path: '/rooms', icon: FiActivity },
-    { name: 'Revenue', path: '/revenue', icon: FiDollarSign },
-    { name: 'Settings', path: '/settings', icon: FiSettings },
+    { name: 'Dashboard', path: '/admin', icon: FiHome },
+    { name: 'Bookings', path: '/admin/bookings', icon: FiCalendar },
+    { name: 'Customers', path: '/admin/customers', icon: FiUsers },
+    { name: 'Rooms', path: '/admin/rooms', icon: FiActivity },
+    { name: 'Revenue', path: '/admin/revenue', icon: FiDollarSign },
+    { name: 'Settings', path: '/admin/settings', icon: FiSettings },
   ];
 
   return (

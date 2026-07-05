@@ -1,6 +1,18 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { DashboardProvider, useDashboard } from './context/DashboardContext';
+
+// Public Layout Components & Pages
+import NavbarPublic from './components/NavbarPublic/NavbarPublic';
+import FooterPublic from './components/FooterPublic/FooterPublic';
+import Home from './pages/Home/Home';
+import About from './pages/About/About';
+import Gallery from './pages/Gallery/Gallery';
+import BookingSection from './pages/BookingSection/BookingSection';
+import Reviews from './pages/Reviews/Reviews';
+import ContactUs from './pages/ContactUs/ContactUs';
+
+// Admin Layout Components & Pages
 import Sidebar from './components/Sidebar/Sidebar';
 import Navbar from './components/Navbar/Navbar';
 import Footer from './components/Footer/Footer';
@@ -12,27 +24,50 @@ import Revenue from './pages/Revenue/Revenue';
 import Settings from './pages/Settings/Settings';
 import './App.css';
 
-// A wrapper component to get state from DashboardContext
-const DashboardLayout = () => {
+// Layout wrapper selector based on current path location
+const AppContent = () => {
+  const location = useLocation();
+  const isAdminPath = location.pathname.startsWith('/admin');
   const { sidebarCollapsed } = useDashboard();
-  
-  return (
-    <div className={`app-layout ${sidebarCollapsed ? 'collapsed' : ''}`}>
-      <Sidebar />
-      <div className="main-panel">
-        <Navbar />
-        <main className="content-area">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/bookings" element={<Bookings />} />
-            <Route path="/customers" element={<Customers />} />
-            <Route path="/rooms" element={<Rooms />} />
-            <Route path="/revenue" element={<Revenue />} />
-            <Route path="/settings" element={<Settings />} />
-          </Routes>
-          <Footer />
-        </main>
+
+  if (isAdminPath) {
+    // Admin Management Portal
+    return (
+      <div className={`app-layout ${sidebarCollapsed ? 'collapsed' : ''}`}>
+        <Sidebar />
+        <div className="main-panel">
+          <Navbar />
+          <main className="content-area">
+            <Routes>
+              <Route path="/admin" element={<Dashboard />} />
+              <Route path="/admin/bookings" element={<Bookings />} />
+              <Route path="/admin/customers" element={<Customers />} />
+              <Route path="/admin/rooms" element={<Rooms />} />
+              <Route path="/admin/revenue" element={<Revenue />} />
+              <Route path="/admin/settings" element={<Settings />} />
+            </Routes>
+            <Footer />
+          </main>
+        </div>
       </div>
+    );
+  }
+
+  // Public Facing Website
+  return (
+    <div className="public-layout">
+      <NavbarPublic />
+      <main className="public-content-area animate-fade-in">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/gallery" element={<Gallery />} />
+          <Route path="/book" element={<BookingSection />} />
+          <Route path="/reviews" element={<Reviews />} />
+          <Route path="/contact" element={<ContactUs />} />
+        </Routes>
+      </main>
+      <FooterPublic />
     </div>
   );
 };
@@ -41,7 +76,7 @@ function App() {
   return (
     <Router>
       <DashboardProvider>
-        <DashboardLayout />
+        <AppContent />
       </DashboardProvider>
     </Router>
   );

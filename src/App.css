@@ -37,3 +37,24 @@
     padding: 1rem;
   }
 }
+
+.public-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100vw;
+  background-color: var(--bg-app);
+}
+
+.public-content-area {
+  flex: 1;
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 576px) {
+  .public-content-area {
+    padding: 1rem;
+  }
+}

@@ -137,6 +137,19 @@ def create_booking(
     return new_booking
 
 
+@router.get("", response_model=List[BookingResponse])
+def get_all_bookings(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(RoleChecker(["Manager", "Admin"]))
+):
+    if current_user.role_name == "Admin":
+        return db.query(Booking).all()
+    
+    # Manager: fetch bookings for rooms belonging to hotels managed by current_user
+    from app.models.models import Room, Hotel
+    return db.query(Booking).join(Room).join(Hotel).filter(Hotel.manager_id == current_user.id).all()
+
+
 @router.get("/my", response_model=List[BookingResponse])
 def get_my_bookings(
     db: Session = Depends(get_db),
@@ -195,4 +208,48 @@ def cancel_booking(
     """
     EmailService.send_email(current_user.user.email if hasattr(current_user, 'user') else current_user.email, subject, body_html, body_text)
     
+    return booking
+
+
+@router.post("/{booking_id}/status", response_model=BookingResponse)
+def update_booking_status(
+    booking_id: int,
+    status_val: str = Query(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(RoleChecker(["Manager", "Admin"]))
+):
+    booking = db.query(Booking).filter(Booking.id == booking_id).first()
+    if not booking:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Booking not found"
+        )
+        
+    # Verify Manager ownership
+    if current_user.role_name == "Manager":
+        from app.models.models import Room, Hotel
+        room = db.query(Room).filter(Room.id == booking.room_id).first()
+        hotel = db.query(Hotel).filter(Hotel.id == room.hotel_id).first()
+        if hotel.manager_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Operation rejected: You do not manage this hotel"
+            )
+            
+    if status_val not in ["Confirmed", "Pending", "Checked In", "Checked Out", "Cancelled"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid booking status value"
+        )
+        
+    booking.booking_status = status_val
+    
+    log = ActivityLog(
+        user_id=current_user.id,
+        action="Booking Status Updated",
+        details=f"Updated booking {booking.booking_code} status to {status_val}."
+    )
+    db.add(log)
+    db.commit()
+    db.refresh(booking)
     return booking

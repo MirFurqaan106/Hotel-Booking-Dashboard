@@ -14,6 +14,7 @@ import ContactUs from './pages/ContactUs/ContactUs';
 import HotelDetails from './pages/HotelDetails/HotelDetails';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
+import UserDashboard from './pages/Dashboard/UserDashboard';
 
 // Admin Layout Components & Pages
 import Sidebar from './components/Sidebar/Sidebar';
@@ -71,6 +72,7 @@ const AppContent = () => {
           <Route path="/hotel/:id" element={<HotelDetails />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/dashboard" element={<UserDashboard />} />
         </Routes>
       </main>
       <FooterPublic />

@@ -136,6 +136,7 @@ class BookingResponse(BaseModel):
     payment_option: str
     created_at: datetime
     room: Optional[RoomResponse] = None
+    user: Optional[UserResponse] = None
 
     class Config:
         from_attributes = True

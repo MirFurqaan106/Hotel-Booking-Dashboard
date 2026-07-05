@@ -1,117 +1,172 @@
-# HorizonStay | Hotel Booking Analytics Dashboard
+# Panun Ghar Luxury Resort | Full-Stack Booking Management Engine
 
-A modern, portfolio-quality, and responsive SaaS Hotel Booking Analytics Dashboard built with **React**, **Recharts**, **React Router**, and **Vanilla CSS**. This dashboard mimics real-world analytics panels used by hoteliers and travel companies to track financial growth, analyze booking channels, manage room layout status, and review customer loyalty data.
+A production-grade, secure, and fully responsive Full-Stack Hotel Booking Engine and Management Dashboard built for **Panun Ghar Luxury Resort** (Srinagar, Kashmir). 
 
----
-
-## 🚀 Key Features
-
-- **📊 Comprehensive KPI Cards**: Real-time evaluation of key performance metrics including Total Bookings, Total Revenue, Occupancy Rate, Cancellation Rate, Average Stay, Available Rooms, and Active Guest check-ins.
-- **📈 Interactive Data Visualizations**: Fully responsive charts built with Recharts, containing:
-  - *Revenue & Profit Trends* (Glassmorphic Area charts)
-  - *Monthly Checked-In stays* (Bar charts)
-  - *Occupancy Rates* (Line charts)
-  - *Room Class & Booking Channels distribution* (Donut charts)
-  - *Cancellation Rate & Customer Review ratios* (Grouped/Single Bar charts)
-  - *Country-wise guest splits* (Horizontal Bar charts)
-- **🔍 Advanced Guest & Booking Registry**: Table containing pagination, column sorting, dynamic searches (Guest Name, Booking ID, Country, Room Type), and status badges (Checked In, Confirmed, Checked Out, Cancelled). Includes a **CSV exporter** to download filtered reports.
-- **👥 Interactive Customer CRM**: Directory grouping booking records by guest to compute total stays, aggregate financial spends, assign loyalty tiers (VIP, Gold, Silver, Regular), and inspect individual profile details alongside chronological stay timelines.
-- **🏨 Live Room Layout Tracker**: Visual catalog of hotel rooms displaying real-time availability. Occupied cards show active guest details and check-out dates. Includes room class filter (Single, Double, Deluxe, President Suite).
-- **⚙️ Account & Application Preferences**: Mock profile edit options, notifications controls, language toggles (English, Spanish, French, German), and **Light/Dark theme** selector.
-- **📱 Responsive Mobile First Design**: Clean CSS Grid and Flexbox system adapting perfectly from desktop screens to tablets and mobile layouts.
+This project simulates a complete, interview-ready enterprise booking system (resembling Goibibo or Booking.com) featuring JWT session authentication, OTP account verification, database transaction safeguards, Razorpay payment simulations, and email notifications.
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ System Architecture
 
-- **Core Framework**: React (Vite template)
-- **Languages**: JavaScript (ES6+), HTML5, CSS3 (Vanilla Custom Layout System)
-- **Libraries**:
-  - [Recharts](https://recharts.org/) for data visualizations
-  - [React Icons](https://react-icons.github.io/react-icons/) (Lucide/Feather icons)
-  - [React Router DOM](https://reactrouter.com/) for fluid client-side page routes
-- **Tooling**: Node.js, Git, npm
-
----
-
-## 📁 Folder Structure
-
-```
-hotel-booking-dashboard/
-│
-├── public/
-│   └── vite.svg
-│
-├── src/
-│   ├── assets/            # Static assets
-│   ├── components/        # Reusable dashboard widgets
-│   │   ├── BookingTable/  # Guest registry table with pagination & CSV export
-│   │   ├── Charts/        # Recharts visual charts
-│   │   ├── Filters/       # Dynamic date, status, and price filters
-│   │   ├── Footer/        # Copyright and status bar
-│   │   ├── Header/        # Page title banner & action reset buttons
-│   │   ├── KPICards/      # Analytical metric grids
-│   │   └── Sidebar/       # Responsive navigation sidebar
-│   │
-│   ├── context/
-│   │   └── DashboardContext.jsx  # Global filters, theme & dataset state
-│   │
-│   ├── data/
-│   │   └── bookings.json  # Comprehensive dataset containing 400 mock logs
-│   │
-│   ├── pages/             # Layout view controllers
-│   │   ├── Dashboard/     # Analytical widgets and recent entries
-│   │   ├── Bookings/      # Complete registry filter catalog
-│   │   ├── Customers/     # Client CRM and stay timelines
-│   │   ├── Rooms/         # Visual room grid status dashboard
-│   │   ├── Revenue/       # Income margins and net profit details
-│   │   └── Settings/      # Preferences configuration panel
-│   │
-│   ├── App.jsx            # Routing and global layouts
-│   ├── App.css            # Overall dashboard grid styles
-│   ├── main.jsx           # Client entrypoint
-│   └── index.css          # Design variables, scrollbars & badges
-│
-├── README.md
-├── package.json
-└── eslint.config.js
+```mermaid
+graph TD
+    A[React SPA Frontend] -->|Axios REST Requests| B[FastAPI Gateway Router]
+    B -->|Middleware JWT / RBAC Check| C[FastAPI Auth & RBAC Security Layer]
+    B -->|Business Operations| D[FastAPI Controllers]
+    D -->|SQLAlchemy ORM| E[SQLite Relational Database]
+    D -->|Simulated Webhook| F[Razorpay Gateway Payment verify]
+    D -->|SMTP Service| G[Gmail Notification Dispatcher]
+    
+    subgraph Role Checker Guard
+        C -->|Allows| Guest[Customer Room Booking]
+        C -->|Allows| Manager[Room Status & Rates Control]
+        C -->|Allows| Admin[Global Analytics & Coupons]
+    end
 ```
 
 ---
 
-## ⚙️ Installation & Running Locally
+## 💾 Relational Database ERD Schema
 
-### Prerequisites
-Make sure you have [Node.js](https://nodejs.org/) installed (v18+ recommended).
+```mermaid
+erDiagram
+    Users ||--o{ Bookings : places
+    Hotels ||--o{ Rooms : contains
+    Rooms ||--o{ Bookings : reserved-in
+    Bookings ||--|| Invoices : generates
+    Bookings ||--o{ Payments : validates
+    Bookings ||--|| Reviews : writes
+    Users ||--o{ ActivityLogs : triggers
+    Users ||--o{ OTPVerifications : verifies
 
-### Steps
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/your-username/Hotel-Booking-Dashboard.git
-   cd Hotel-Booking-Dashboard
-   ```
+    Users {
+        int id PK
+        string email UK
+        string password_hash
+        string full_name
+        string phone
+        string role_name
+        boolean is_active
+        datetime created_at
+    }
+    
+    Hotels {
+        int id PK
+        string name
+        string description
+        string address
+        string city
+        string email
+        string phone
+        int manager_id FK
+        boolean is_approved
+    }
 
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+    Rooms {
+        int id PK
+        int hotel_id FK
+        string room_type
+        int room_number
+        int price_per_night
+        boolean is_available
+    }
 
-3. **Run in development mode**:
-   ```bash
-   npm run dev
-   ```
-   Open your browser and navigate to `http://localhost:5173`.
+    Bookings {
+        int id PK
+        string booking_code UK
+        int user_id FK
+        int room_id FK
+        date check_in
+        date check_out
+        string booking_status
+        int total_amount
+        int paid_amount
+        string payment_option
+        datetime created_at
+    }
 
-4. **Build production assets**:
-   ```bash
-   npm run build
-   ```
+    Payments {
+        int id PK
+        int booking_id FK
+        string transaction_id UK
+        int amount
+        string payment_status
+        string gateway
+        datetime created_at
+    }
+    
+    Invoices {
+        int id PK
+        int booking_id FK
+        string invoice_code UK
+        datetime created_at
+    }
+
+    Reviews {
+        int id PK
+        int booking_id FK
+        int user_id FK
+        int rating
+        string comment
+        string response
+        datetime created_at
+    }
+```
 
 ---
 
-## 🔮 Future Enhancements
+## 🔒 Cybersecurity & Production Safeguards
 
-- **Backend Integration**: Replace the static `bookings.json` with a live REST API (Node.js/Express) and relational database (PostgreSQL/MongoDB).
-- **Live Booking Flow**: Add an interactive interface for managers to manually add, modify, or cancel client stays directly from the front-end.
-- **Staff Operations Tracker**: Add a panel to assign room cleaning services, laundry orders, and room service deliveries to operational staff.
-- **Printable PDF Reports**: Expand the CSV exporter to support full canvas-rendered PDF analytics reporting.
+1. **Relational Parameterization**: All database query evaluations use the SQLAlchemy ORM layer. This automatically parameterizes inputs, rendering **SQL Injection (SQLi) impossible**.
+2. **Password Crypt Hashing**: User passwords are never saved raw. They are processed using **Bcrypt with 12 rounds of salt** to secure user databases.
+3. **Session Token Expirations**: Uses double-token JWTs:
+   - **Access Token**: Valid for 60 minutes.
+   - **Refresh Token**: Valid for 30 days. Auto-issued via Axios response interceptors on expired 401s without disrupting the client checkout loop.
+4. **Role-Based Access Controls (RBAC)**: Fine-grained FastAPI endpoint dependency injections verify that user roles match permitted scopes (`User`, `Manager`, `Admin`).
+5. **OTP Verification Expiry**: Email activation codes are limited to a **10-minute lifespan** in SQLite.
+6. **No Hardcoded Secrets**: All configs (secrets, tokens, SMTP servers) are parsed from a secure `.env` file using Pydantic.
+
+---
+
+## 🚀 Setup & Quickstart
+
+Deploy the complete full-stack environment instantly using Docker Compose:
+
+### 1. Build and run containers
+```bash
+docker-compose up --build
+```
+
+- **Frontend App**: Served at `http://localhost` (Nginx port 80).
+- **Backend API Docs**: Served at `http://localhost:8000/docs` (FastAPI Swagger UI).
+
+### 2. Manual Development Setup
+
+If you prefer running the servers locally for active debugging:
+
+**Backend Setup:**
+```bash
+cd backend
+python -m venv venv
+# On Windows
+.\venv\Scripts\activate
+pip install -r requirements.txt
+python seed.py
+uvicorn app.main:app --reload --port 8000
+```
+
+**Frontend Setup:**
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+---
+
+## 👨‍💻 Project Ownership
+
+- **Hotel Branding**: Panun Ghar Luxury Resort (Dal Lake, Srinagar, Kashmir)
+- **Primary Owner**: Mir Furqaan
+- **Primary Gmail**: `mirfurkaan106@gmail.com`
+- **Contact Number**: `+91 7889984798`

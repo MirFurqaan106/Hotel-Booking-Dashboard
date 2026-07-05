@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import bookingsData from '../data/bookings.json';
+import api from '../services/api';
 
 const DashboardContext = createContext();
 
@@ -18,6 +19,43 @@ export const DashboardProvider = ({ children }) => {
   const addNewBooking = (newBooking) => {
     setBookings((prev) => [newBooking, ...prev]);
   };
+
+  // Synchronize live bookings if user is logged in as Admin/Manager
+  useEffect(() => {
+    const role = localStorage.getItem('user_role');
+    const token = localStorage.getItem('access_token');
+    
+    if (token && (role === 'Admin' || role === 'Manager')) {
+      const loadLiveBookings = async () => {
+        try {
+          const res = await api.get('/bookings');
+          const mapped = res.data.map(b => ({
+            BookingID: b.booking_code,
+            GuestName: b.user ? b.user.full_name : "Walk-In Guest",
+            Age: 28,
+            Gender: "Male",
+            Country: b.user && b.user.phone ? "India" : "International",
+            HotelName: "Panun Ghar",
+            RoomType: b.room ? b.room.room_type : "Deluxe Suite",
+            RoomNumber: b.room ? b.room.room_number : 101,
+            BookingDate: b.created_at.split('T')[0],
+            CheckIn: b.check_in,
+            CheckOut: b.check_out,
+            BookingSource: "Direct",
+            PaymentMethod: b.payment_option,
+            BookingStatus: b.booking_status,
+            PaymentStatus: b.paid_amount >= b.total_amount ? "Paid" : "Unpaid",
+            Revenue: b.total_amount,
+            Rating: b.booking_status === "Checked Out" ? 5 : null
+          }));
+          setBookings(mapped);
+        } catch (err) {
+          console.error("Failed to load live backend bookings:", err);
+        }
+      };
+      loadLiveBookings();
+    }
+  }, []);
 
   // Theme state: default to localStorage or dark if preferred
   const [theme, setTheme] = useState(() => {

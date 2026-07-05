@@ -11,6 +11,7 @@ from app.utils.security import verify_password, get_password_hash
 from app.utils.jwt import create_access_token, create_refresh_token, decode_token
 from app.config.config import settings
 from app.services.email import EmailService
+from app.api.deps import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -286,7 +287,6 @@ def change_password(
     current_user: User = Depends(get_current_user)
 ):
     import bcrypt
-    from app.api.deps import get_current_user
     
     # 1. Verify current password
     pwd_bytes = req.current_password.encode('utf-8')

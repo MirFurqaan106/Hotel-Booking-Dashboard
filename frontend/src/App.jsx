@@ -11,6 +11,9 @@ import Gallery from './pages/Gallery/Gallery';
 import BookingSection from './pages/BookingSection/BookingSection';
 import Reviews from './pages/Reviews/Reviews';
 import ContactUs from './pages/ContactUs/ContactUs';
+import HotelDetails from './pages/HotelDetails/HotelDetails';
+import Login from './pages/Auth/Login';
+import Register from './pages/Auth/Register';
 
 // Admin Layout Components & Pages
 import Sidebar from './components/Sidebar/Sidebar';
@@ -65,6 +68,9 @@ const AppContent = () => {
           <Route path="/book" element={<BookingSection />} />
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/contact" element={<ContactUs />} />
+          <Route path="/hotel/:id" element={<HotelDetails />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
       </main>
       <FooterPublic />

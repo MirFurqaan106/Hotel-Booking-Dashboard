@@ -10,7 +10,8 @@ import {
   FiSettings, 
   FiChevronLeft, 
   FiChevronRight,
-  FiX
+  FiX,
+  FiLogOut
 } from 'react-icons/fi';
 import './Sidebar.css';
 
@@ -21,6 +22,11 @@ const Sidebar = () => {
     mobileSidebarOpen,
     setMobileSidebarOpen
   } = useDashboard();
+
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.href = '/';
+  };
 
   const navigationItems = [
     { name: 'Dashboard', path: '/admin', icon: FiHome },
@@ -71,6 +77,18 @@ const Sidebar = () => {
                 </li>
               );
             })}
+            
+            <li>
+              <button 
+                type="button"
+                onClick={handleLogout} 
+                className="nav-link" 
+                style={{ width: '100%', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', color: 'var(--danger)' }}
+              >
+                <FiLogOut className="nav-icon" size={20} style={{ color: 'var(--danger)' }} />
+                {!sidebarCollapsed && <span className="nav-text" style={{ fontWeight: 700 }}>Sign Out</span>}
+              </button>
+            </li>
           </ul>
         </nav>
 

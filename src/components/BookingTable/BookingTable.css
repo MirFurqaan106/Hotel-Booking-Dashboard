@@ -1,0 +1,248 @@
+.table-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.table-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.entries-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.entries-selector select {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-main);
+  border-radius: var(--radius-md);
+  outline: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.table-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.table-btn:hover {
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border-color: transparent;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.bookings-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.bookings-table th,
+.bookings-table td {
+  padding: 1rem;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.bookings-table th {
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background-color: var(--bg-app);
+  user-select: none;
+}
+
+.bookings-table th.sortable {
+  cursor: pointer;
+}
+
+.bookings-table th.sortable:hover {
+  color: var(--primary);
+  background-color: var(--primary-light);
+}
+
+.bookings-table th svg {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 0.25rem;
+}
+
+.bookings-table tr:hover td {
+  background-color: var(--bg-app);
+}
+
+.bookings-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Cell specifics */
+.font-semibold {
+  font-weight: 600;
+}
+
+.guest-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.guest-name-main {
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.guest-meta-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.room-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.room-type-text {
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.room-num-text {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.revenue-cell {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.country-badge {
+  background-color: var(--bg-app);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  border: 1px solid var(--border-color);
+}
+
+.no-records-cell {
+  text-align: center;
+  padding: 3rem 1rem !important;
+  color: var(--text-muted);
+}
+
+.no-records-cell p {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+}
+
+/* Pagination container */
+.pagination-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.pagination-info {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pagination-btn {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border-color: transparent;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-page-number {
+  min-width: 32px;
+  height: 32px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.pagination-page-number:hover {
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border-color: transparent;
+}
+
+.pagination-page-number.active {
+  background-color: var(--primary);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+@media (max-width: 768px) {
+  .pagination-container {
+    flex-direction: column;
+    align-items: center;
+  }
+}

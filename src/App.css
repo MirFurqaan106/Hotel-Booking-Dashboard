@@ -1,0 +1,39 @@
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  overflow-x: hidden;
+}
+
+.main-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: var(--sidebar-width);
+  transition: margin-left var(--transition-normal);
+  min-width: 0; /* Critical: prevents charts/tables from blowing out flex width */
+}
+
+.app-layout.collapsed .main-panel {
+  margin-left: var(--sidebar-collapsed-width);
+}
+
+.content-area {
+  flex: 1;
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-app);
+}
+
+@media (max-width: 991px) {
+  .main-panel {
+    margin-left: 0 !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .content-area {
+    padding: 1rem;
+  }
+}

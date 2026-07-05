@@ -1,0 +1,5 @@
+/* Spacing styles for Bookings Page */
+.bookings-page {
+  display: flex;
+  flex-direction: column;
+}

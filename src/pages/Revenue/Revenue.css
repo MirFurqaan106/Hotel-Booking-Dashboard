@@ -1,0 +1,102 @@
+.revenue-kpis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.rev-kpi-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 120px;
+}
+
+.rev-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.rev-card-header .lbl {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.rev-kpi-card h3 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-top: 0.5rem;
+}
+
+.kpi-desc-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.trend-up {
+  color: var(--success);
+  font-weight: 600;
+}
+
+/* Revenue Charts Layout */
+.revenue-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.chart-large {
+  grid-column: span 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-medium {
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-header-custom {
+  margin-bottom: 1.25rem;
+}
+
+.chart-header-custom h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.chart-header-custom p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.chart-content {
+  width: 100%;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 991px) {
+  .revenue-charts-grid {
+    grid-template-columns: 1fr;
+  }
+  .chart-large {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 576px) {
+  .revenue-kpis-grid {
+    grid-template-columns: 1fr;
+  }
+}

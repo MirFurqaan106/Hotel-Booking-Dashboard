@@ -1,0 +1,142 @@
+.page-container {
+  padding: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.dashboard-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.chart-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-header {
+  margin-bottom: 1rem;
+}
+
+.chart-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.chart-header p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* Secondary list / table styling */
+.dashboard-secondary-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.dashboard-quick-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.quick-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.75rem;
+}
+
+.quick-list-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.quick-list-header p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.view-all-link {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary);
+  transition: gap var(--transition-fast);
+}
+
+.view-all-link:hover {
+  gap: 0.4rem;
+}
+
+.quick-list-table-wrapper {
+  overflow-x: auto;
+}
+
+.quick-list-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.quick-list-table th,
+.quick-list-table td {
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.quick-list-table th {
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background-color: var(--bg-app);
+}
+
+.quick-list-table tr:last-child td {
+  border-bottom: none;
+}
+
+.guest-cell {
+  display: flex;
+  flex-direction: column;
+}
+
+.guest-name {
+  font-weight: 500;
+  color: var(--text-main);
+}
+
+.guest-id {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.amount-cell {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.empty-quick-list {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 1199px) {
+  .dashboard-charts-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}

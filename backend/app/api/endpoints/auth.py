@@ -151,7 +151,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         )
         
     # 3. Issue Tokens
-    token_data = {"sub": user.email, "role": user.role_name}
+    token_data = {"sub": user.email, "role": user.role_name, "name": user.full_name}
     access_token = create_access_token(data=token_data)
     refresh_token = create_refresh_token(data=token_data)
     
@@ -197,7 +197,7 @@ def refresh_token(refresh_token_str: str, db: Session = Depends(get_db)):
         )
         
     # 3. Issue new tokens
-    token_data = {"sub": user.email, "role": user.role_name}
+    token_data = {"sub": user.email, "role": user.role_name, "name": user.full_name}
     new_access = create_access_token(data=token_data)
     new_refresh = create_refresh_token(data=token_data)
     

@@ -13,6 +13,11 @@ const Home = () => {
   // Search Inputs
   const [citySearch, setCitySearch] = useState('Srinagar');
   const [keywordSearch, setKeywordSearch] = useState('');
+
+  // Logged In User Bookings state
+  const token = localStorage.getItem('access_token');
+  const [myBookings, setMyBookings] = useState([]);
+  const [myBookingsLoading, setMyBookingsLoading] = useState(false);
   
   const fetchHotels = async (cityVal = '', searchVal = '') => {
     setLoading(true);
@@ -32,22 +37,46 @@ const Home = () => {
     }
   };
 
+  const fetchMyBookings = async () => {
+    setMyBookingsLoading(true);
+    try {
+      const res = await api.get('/bookings/my');
+      setMyBookings(res.data);
+    } catch (err) {
+      console.error("Error loading my bookings on home page:", err);
+    } finally {
+      setMyBookingsLoading(false);
+    }
+  };
+
   useEffect(() => {
     // Initial fetch for approved hotels
     fetchHotels('Srinagar');
-  }, []);
+    if (token) {
+      fetchMyBookings();
+    }
+  }, [token]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     fetchHotels(citySearch, keywordSearch);
   };
 
+  // Filter for confirmed stays in future
+  const upcomingStays = myBookings.filter(b => {
+    if (b.booking_status === 'Cancelled') return false;
+    const checkoutDate = new Date(b.check_out);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    return checkoutDate >= today;
+  });
+
   return (
     <div className="home-page animate-fade-in">
       {/* Hero Section with Search Card */}
       <section className="hero-section" style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.5)), url(${hotelExterior})` }}>
         <div className="hero-content">
-          <span className="hero-welcome-badge">Goibibo Simplified</span>
+          <span className="hero-welcome-badge">Panun Ghar Resort</span>
           <h1>Find Your Perfect Kashmiri Stay</h1>
           <p>Book premium hotels and heritage resorts in Kashmir with Razorpay & Gmail verification.</p>
           
@@ -85,6 +114,49 @@ const Home = () => {
           </form>
         </div>
       </section>
+
+      {/* Logged in User Bookings Section */}
+      {token && upcomingStays.length > 0 && (
+        <section className="upcoming-stays-section animate-fade-in">
+          <div className="upcoming-header">
+            <h2>Welcome back, {localStorage.getItem('user_name') || 'Guest'}!</h2>
+            <p>Here are your upcoming stays and reservations at Panun Ghar Resort:</p>
+          </div>
+          <div className="upcoming-stays-grid">
+            {upcomingStays.map((booking) => (
+              <div key={booking.id} className="upcoming-stay-card card glass-panel">
+                <div className={`stay-card-badge ${booking.booking_status === 'Confirmed' ? 'text-success' : 'text-warning'}`}>
+                  {booking.booking_status}
+                </div>
+                <h4>Reservation: {booking.booking_code}</h4>
+                <div className="stay-meta-grid">
+                  <div className="stay-meta-item">
+                    <span>Check-In:</span>
+                    <strong>{booking.check_in}</strong>
+                  </div>
+                  <div className="stay-meta-item">
+                    <span>Check-Out:</span>
+                    <strong>{booking.check_out}</strong>
+                  </div>
+                  <div className="stay-meta-item">
+                    <span>Room Class:</span>
+                    <strong>{booking.room ? booking.room.room_type : 'Suite Category'} (Room {booking.room ? booking.room.room_number : 'TBD'})</strong>
+                  </div>
+                  <div className="stay-meta-item">
+                    <span>Paid Advance:</span>
+                    <strong>₹{booking.paid_amount} / ₹{booking.total_amount}</strong>
+                  </div>
+                </div>
+                <div className="stay-card-footer" style={{ marginTop: '0.5rem' }}>
+                  <Link to="/dashboard" className="manage-stay-link-btn">
+                    Manage Stay Details & Invoices
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Main Listings Grid */}
       <section className="hotels-listings-section">
@@ -174,3 +246,4 @@ const Home = () => {
 };
 
 export default Home;
+export { Home };

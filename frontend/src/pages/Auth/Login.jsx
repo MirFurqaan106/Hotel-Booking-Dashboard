@@ -37,6 +37,7 @@ const Login = () => {
       const payload = JSON.parse(atob(payloadBase64));
       localStorage.setItem('user_role', payload.role || 'User');
       localStorage.setItem('user_email', payload.sub || email);
+      localStorage.setItem('user_name', payload.name || 'Resort Guest');
 
       // Redirect based on role permissions
       if (payload.role === 'Admin' || payload.role === 'Manager') {
@@ -93,6 +94,11 @@ const Login = () => {
                 placeholder="••••••••"
                 required
               />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.35rem' }}>
+              <Link to="/forgot-password" style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>
+                Forgot Password?
+              </Link>
             </div>
           </div>
 

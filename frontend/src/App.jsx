@@ -17,6 +17,7 @@ import Register from './pages/Auth/Register';
 import UserDashboard from './pages/Dashboard/UserDashboard';
 import FAQ from './pages/FAQ/FAQ';
 import Support from './pages/Support/Support';
+import ForgotPassword from './pages/Auth/ForgotPassword';
 
 // Admin Layout Components & Pages
 import Sidebar from './components/Sidebar/Sidebar';
@@ -75,9 +76,10 @@ const AppContent = () => {
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/book" element={<BookingSection />} />
           <Route path="/reviews" element={<Reviews />} />
-          <Route path="/contact" element={<ContactUs />} />
+          <Route path="/contact" element={<Support />} />
           <Route path="/hotel/:id" element={<HotelDetails />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/register" element={<Register />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/support" element={<Support />} />

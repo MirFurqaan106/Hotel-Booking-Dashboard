@@ -152,7 +152,7 @@ const UserDashboard = () => {
             <FiUser size={32} />
           </div>
           <div>
-            <h2>Hello, Guest Customer!</h2>
+            <h2>Hello, {localStorage.getItem('user_name') || 'Guest Customer'}!</h2>
             <p>{localStorage.getItem('user_email')}</p>
           </div>
         </div>

@@ -18,13 +18,12 @@ const NavbarPublic = () => {
 
   const links = [
     { name: 'Home', path: '/' },
-    { name: 'About The Hotel', path: '/about' },
+    { name: 'Know Us', path: '/about' },
     { name: 'Gallery', path: '/gallery' },
     { name: 'Book Room', path: '/book' },
     { name: 'FAQ', path: '/faq' },
-    { name: 'Support', path: '/support' },
-    { name: 'Customer Reviews', path: '/reviews' },
-    { name: 'Contact Us', path: '/contact' }
+    { name: 'Support & Contact', path: '/support' },
+    { name: 'Customer Reviews', path: '/reviews' }
   ];
 
   return (

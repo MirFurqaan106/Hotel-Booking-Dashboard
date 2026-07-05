@@ -336,3 +336,138 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Success modal styling */
+.success-modal {
+  width: 500px;
+  max-width: 95%;
+  padding: 2.25rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.5rem;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.success-icon-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.success-icon-header h2 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin: 0;
+  color: var(--text-main);
+}
+
+.booking-ref-txt {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.success-details-box {
+  width: 100%;
+  background-color: var(--bg-app);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.success-details-box p {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-muted);
+}
+
+.success-details-box p strong {
+  color: var(--text-main);
+}
+
+.notification-actions-box {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+.act-txt {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.actions-vertical-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.notify-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: #ffffff;
+}
+
+.gmail-btn {
+  background-color: #ea4335;
+}
+
+.gmail-btn:hover {
+  background-color: #d33426;
+  transform: translateY(-1px);
+}
+
+.whatsapp-btn {
+  background-color: #25d366;
+}
+
+.whatsapp-btn:hover {
+  background-color: #20ba56;
+  transform: translateY(-1px);
+}
+
+.close-success-modal-btn {
+  width: 100%;
+  padding: 0.85rem;
+  background-color: var(--primary);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  margin-top: 0.5rem;
+}
+
+.close-success-modal-btn:hover {
+  background-color: var(--primary-hover);
+}
+

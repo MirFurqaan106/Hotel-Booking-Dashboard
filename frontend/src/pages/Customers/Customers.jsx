@@ -6,7 +6,7 @@ import api from '../../services/api';
 import './Customers.css';
 
 const Customers = () => {
-  const { allBookings } = useDashboard();
+  const { allBookings, loadLiveBookings } = useDashboard();
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loyaltyFilter, setLoyaltyFilter] = useState('All');
@@ -14,6 +14,7 @@ const Customers = () => {
 
   // Fetch real users from SQLite
   useEffect(() => {
+    loadLiveBookings();
     const loadUsers = async () => {
       try {
         const res = await api.get('/admin-portal/users');
@@ -199,7 +200,7 @@ const Customers = () => {
                     <FiDollarSign size={18} className="text-success" />
                     <div className="kpi-meta">
                       <span className="kpi-lbl">Total Spent</span>
-                      <span className="kpi-val">${activeCustomer.totalSpent.toLocaleString()}</span>
+                      <span className="kpi-val">₹{activeCustomer.totalSpent.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
@@ -232,7 +233,7 @@ const Customers = () => {
                       </div>
                     </div>
                     <div className="history-revenue">
-                      <span>${b.Revenue}</span>
+                      <span>₹{b.Revenue}</span>
                     </div>
                   </div>
                 ))}

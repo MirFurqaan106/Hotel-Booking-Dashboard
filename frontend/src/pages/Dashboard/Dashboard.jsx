@@ -14,7 +14,11 @@ import { FiArrowRight } from 'react-icons/fi';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const { filteredBookings } = useDashboard();
+  const { filteredBookings, loadLiveBookings } = useDashboard();
+
+  React.useEffect(() => {
+    loadLiveBookings();
+  }, []);
 
   // Get top 5 upcoming reservations
   const upcomingBookings = React.useMemo(() => {

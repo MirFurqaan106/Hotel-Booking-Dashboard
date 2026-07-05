@@ -119,8 +119,8 @@ const Navbar = () => {
         {/* User Profile */}
         <div className="navbar-profile">
           <div className="profile-info">
-            <span className="profile-name">Mir Furqaan</span>
-            <span className="profile-role">Admin Manager</span>
+            <span className="profile-name">{localStorage.getItem('user_name') || 'Resort Admin'}</span>
+            <span className="profile-role">{localStorage.getItem('user_role') || 'Admin'}</span>
           </div>
           <div className="profile-avatar">
             <FiUser size={18} />

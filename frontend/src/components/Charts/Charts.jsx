@@ -82,7 +82,7 @@ const useMonthlyData = (bookings) => {
         const label = dateObj.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
         
         // Mock dynamic occupancy rate based on bookings/checkedIn relative to a hypothetical capacity
-        const monthlyCapacity = 150 * 30; // 150 rooms * 30 days = 4500 room-nights
+        const monthlyCapacity = 12 * 30; // 12 rooms * 30 days = 360 room-nights
         const estimatedNights = monthly[key].bookings * 3.5; // Average stay 3.5 nights
         const occupancyRate = Math.min(95, Math.round((estimatedNights / monthlyCapacity) * 100));
 
@@ -351,7 +351,7 @@ export const CustomerRatingsChart = () => {
 // ==========================================
 export const RoomAvailabilityChart = () => {
   const { filteredBookings } = useDashboard();
-  const totalHotelRooms = 150;
+  const totalHotelRooms = 12;
 
   const data = useMemo(() => {
     // Rooms currently occupied: status "Checked In"

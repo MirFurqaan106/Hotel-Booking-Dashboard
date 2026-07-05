@@ -30,7 +30,11 @@ import './Revenue.css';
 const COLORS = ['#2563eb', '#10b981', '#f59e0b', '#8b5cf6'];
 
 const Revenue = () => {
-  const { filteredBookings } = useDashboard();
+  const { filteredBookings, loadLiveBookings } = useDashboard();
+
+  React.useEffect(() => {
+    loadLiveBookings();
+  }, []);
 
   // 1. Core Financial KPI Metrics
   const metrics = useMemo(() => {

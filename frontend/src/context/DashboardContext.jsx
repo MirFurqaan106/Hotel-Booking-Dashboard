@@ -20,40 +20,64 @@ export const DashboardProvider = ({ children }) => {
   };
 
   // Synchronize live bookings if user is logged in as Admin/Manager
-  useEffect(() => {
+  const loadLiveBookings = async () => {
     const role = localStorage.getItem('user_role');
     const token = localStorage.getItem('access_token');
     
     if (token && (role === 'Admin' || role === 'Manager')) {
-      const loadLiveBookings = async () => {
-        try {
-          const res = await api.get('/bookings');
-          const mapped = res.data.map(b => ({
-            BookingID: b.booking_code,
-            GuestName: b.user ? b.user.full_name : "Walk-In Guest",
-            Age: 28,
-            Gender: "Male",
-            Country: b.user && b.user.phone ? "India" : "International",
-            HotelName: "Panun Ghar",
-            RoomType: b.room ? b.room.room_type : "Deluxe Suite",
-            RoomNumber: b.room ? b.room.room_number : 101,
-            BookingDate: b.created_at.split('T')[0],
-            CheckIn: b.check_in,
-            CheckOut: b.check_out,
-            BookingSource: "Direct",
-            PaymentMethod: b.payment_option,
-            BookingStatus: b.booking_status,
-            PaymentStatus: b.paid_amount >= b.total_amount ? "Paid" : "Unpaid",
-            Revenue: b.total_amount,
-            Rating: b.booking_status === "Checked Out" ? 5 : null
-          }));
-          setBookings(mapped);
-        } catch (err) {
-          console.error("Failed to load live backend bookings:", err);
-        }
-      };
-      loadLiveBookings();
+      try {
+        const res = await api.get('/bookings');
+        const mapped = res.data.map(b => ({
+          dbId: b.id,
+          BookingID: b.booking_code,
+          GuestName: b.user ? b.user.full_name : "Walk-In Guest",
+          Age: 28,
+          Gender: "Male",
+          Country: b.user && b.user.phone ? "India" : "International",
+          HotelName: "Panun Ghar",
+          RoomType: b.room ? b.room.room_type : "Deluxe Suite",
+          RoomNumber: b.room ? b.room.room_number : 101,
+          BookingDate: b.created_at.split('T')[0],
+          CheckIn: b.check_in,
+          CheckOut: b.check_out,
+          BookingSource: "Direct",
+          PaymentMethod: b.payment_option,
+          BookingStatus: b.booking_status,
+          PaymentStatus: b.paid_amount >= b.total_amount ? "Paid" : "Unpaid",
+          Revenue: b.total_amount,
+          Rating: b.booking_status === "Checked Out" ? 5 : null
+        }));
+        setBookings(mapped);
+      } catch (err) {
+        console.error("Failed to load live backend bookings:", err);
+      }
     }
+  };
+
+  const updateBookingStatus = async (bookingId, newStatus) => {
+    try {
+      const target = bookings.find(b => b.BookingID === bookingId);
+      if (!target) return;
+      await api.post(`/bookings/${target.dbId}/status?status_val=${newStatus}`);
+      await loadLiveBookings();
+    } catch (err) {
+      alert(err.response?.data?.detail || "Failed to update booking status.");
+    }
+  };
+
+  const cancelBooking = async (bookingId) => {
+    try {
+      const target = bookings.find(b => b.BookingID === bookingId);
+      if (!target) return;
+      await api.post(`/bookings/${target.dbId}/cancel`);
+      await loadLiveBookings();
+    } catch (err) {
+      alert(err.response?.data?.detail || "Failed to cancel booking.");
+    }
+  };
+
+  useEffect(() => {
+    loadLiveBookings();
   }, []);
 
   // Theme state: default to localStorage or dark if preferred
@@ -184,7 +208,7 @@ export const DashboardProvider = ({ children }) => {
 
       return true;
     });
-  }, [filters, searchQuery]);
+  }, [filters, searchQuery, bookings]);
 
   const resetFilters = () => {
     setFilters({
@@ -202,6 +226,9 @@ export const DashboardProvider = ({ children }) => {
   const value = {
     allBookings: bookings,
     addNewBooking,
+    loadLiveBookings,
+    updateBookingStatus,
+    cancelBooking,
     filteredBookings,
     filters,
     setFilters,

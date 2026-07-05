@@ -17,7 +17,7 @@ import './KPICards.css';
 const KPICards = () => {
   const { filteredBookings } = useDashboard();
   const currentDateStr = '2026-07-05';
-  const totalHotelRooms = 150;
+  const totalHotelRooms = 12;
 
   // 1. Calculations
   const totalBookings = filteredBookings.length;

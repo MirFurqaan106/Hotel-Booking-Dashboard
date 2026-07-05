@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useDashboard } from '../../context/DashboardContext';
 import Header from '../../components/Header/Header';
 import { 
@@ -13,26 +13,35 @@ import {
   FiXCircle,
   FiUser
 } from 'react-icons/fi';
+import api from '../../services/api';
 import './Rooms.css';
 
 const Rooms = () => {
-  const { allBookings } = useDashboard();
+  const { allBookings, loadLiveBookings } = useDashboard();
   const [selectedType, setSelectedType] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
+  const [dbRooms, setDbRooms] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // 1. Generate static rooms metadata (150 rooms total)
+  const fetchRoomsData = async () => {
+    setLoading(true);
+    try {
+      await loadLiveBookings();
+      const res = await api.get('/hotels/1/rooms');
+      setDbRooms(res.data);
+    } catch (err) {
+      console.error("Error loading rooms list:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRoomsData();
+  }, []);
+
+  // Map backend rooms with active bookings to determine occupied vs. ready rooms
   const rooms = useMemo(() => {
-    const tempRooms = [];
-    
-    // Room configs
-    const configs = [
-      { type: 'Single Room', basePrice: 90, floors: [1, 2], countPerFloor: 15, facilities: [FiWifi, FiTv, FiWind] },
-      { type: 'Double Room', basePrice: 140, floors: [2, 3], countPerFloor: 15, facilities: [FiWifi, FiTv, FiWind, FiCoffee] },
-      { type: 'Deluxe Suite', basePrice: 240, floors: [4], countPerFloor: 10, facilities: [FiWifi, FiTv, FiWind, FiCoffee, FiCompass, FiBriefcase] },
-      { type: 'President Suite', basePrice: 550, floors: [5], countPerFloor: 5, facilities: [FiWifi, FiTv, FiWind, FiCoffee, FiCompass, FiBriefcase] }
-    ];
-
-    // Determine occupied rooms from active bookings (status = 'Checked In')
     const occupiedMap = {};
     allBookings.forEach(b => {
       if (b.BookingStatus === 'Checked In') {
@@ -44,36 +53,21 @@ const Rooms = () => {
       }
     });
 
-    configs.forEach(config => {
-      config.floors.forEach(floor => {
-        for (let i = 1; i <= config.countPerFloor; i++) {
-          const roomNum = floor * 100 + i;
-          
-          // Generate a rating based on historical reviews for that room, fallback to mock rating
-          const historicalReviews = allBookings.filter(b => b.RoomNumber === roomNum && b.Rating);
-          const avgRating = historicalReviews.length > 0
-            ? (historicalReviews.reduce((sum, b) => sum + b.Rating, 0) / historicalReviews.length).toFixed(1)
-            : (4.0 + Math.random() * 1.0).toFixed(1);
+    return dbRooms.map(r => {
+      const occupancy = occupiedMap[r.room_number] || null;
+      return {
+        roomNumber: r.room_number,
+        roomType: r.room_type,
+        price: r.price_per_night,
+        facilities: [FiWifi, FiTv, FiWind, FiCoffee],
+        rating: "4.9",
+        occupancy: occupancy, // Null means available, object means occupied
+        available: occupancy === null
+      };
+    }).sort((a, b) => a.roomNumber - b.roomNumber);
+  }, [dbRooms, allBookings]);
 
-          const occupancy = occupiedMap[roomNum] || null;
-
-          tempRooms.push({
-            roomNumber: roomNum,
-            roomType: config.type,
-            price: config.basePrice,
-            facilities: config.facilities,
-            rating: avgRating,
-            occupancy: occupancy, // Null means available, object means occupied
-            available: occupancy === null
-          });
-        }
-      });
-    });
-
-    return tempRooms.sort((a, b) => a.roomNumber - b.roomNumber);
-  }, [allBookings]);
-
-  // 2. Filter Rooms
+  // Filter Rooms
   const filteredRooms = useMemo(() => {
     return rooms.filter(r => {
       const typeMatches = selectedType === 'All' || r.roomType === selectedType;
@@ -93,6 +87,8 @@ const Rooms = () => {
     
     return { total, occupied, available };
   }, [rooms]);
+
+  if (loading) return <div className="loading-spinner-box">Loading rooms status...</div>;
 
   return (
     <div className="rooms-page page-container animate-fade-in">
@@ -120,10 +116,10 @@ const Rooms = () => {
           <label>Room Category:</label>
           <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)}>
             <option value="All">All Categories</option>
-            <option value="Single Room">Single Rooms</option>
-            <option value="Double Room">Double Rooms</option>
             <option value="Deluxe Suite">Deluxe Suites</option>
+            <option value="Executive Suite">Executive Suites</option>
             <option value="President Suite">President Suites</option>
+            <option value="Heritage Suite">Heritage Suites</option>
           </select>
         </div>
 

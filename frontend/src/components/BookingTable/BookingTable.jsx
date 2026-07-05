@@ -11,7 +11,7 @@ import {
 import './BookingTable.css';
 
 const BookingTable = () => {
-  const { filteredBookings } = useDashboard();
+  const { filteredBookings, updateBookingStatus, cancelBooking } = useDashboard();
   
   // 1. Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -182,6 +182,7 @@ const BookingTable = () => {
               <th onClick={() => requestSort('Country')} className="sortable">
                 Country {getSortIcon('Country')}
               </th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -208,6 +209,37 @@ const BookingTable = () => {
                   <td className="revenue-cell">₹{b.Revenue}</td>
                   <td>
                     <span className="country-badge">{b.Country}</span>
+                  </td>
+                  <td>
+                    <div style={{ display: 'flex', gap: '0.35rem' }}>
+                      {b.BookingStatus === 'Confirmed' && (
+                        <>
+                          <button 
+                            className="checkin-btn" 
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', fontWeight: 700, borderRadius: 'var(--radius-sm)', border: 'none', backgroundColor: 'var(--success-light)', color: 'var(--success)', cursor: 'pointer' }}
+                            onClick={() => updateBookingStatus(b.BookingID, 'Checked In')}
+                          >
+                            Check In
+                          </button>
+                          <button 
+                            className="cancel-btn" 
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', fontWeight: 700, borderRadius: 'var(--radius-sm)', border: 'none', backgroundColor: 'var(--danger-light)', color: 'var(--danger)', cursor: 'pointer' }}
+                            onClick={() => cancelBooking(b.BookingID)}
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      )}
+                      {b.BookingStatus === 'Checked In' && (
+                        <button 
+                          className="checkout-btn" 
+                          style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', fontWeight: 700, borderRadius: 'var(--radius-sm)', border: 'none', backgroundColor: 'var(--info-light)', color: 'var(--info)', cursor: 'pointer' }}
+                          onClick={() => updateBookingStatus(b.BookingID, 'Checked Out')}
+                        >
+                          Check Out
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))

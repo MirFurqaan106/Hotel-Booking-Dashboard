@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.endpoints import auth
+from app.api.endpoints import auth, hotels, bookings, payments, coupons, reviews
 from app.api.deps import get_current_user, RoleChecker
 from app.models.models import User
 
@@ -20,8 +20,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include Auth Endpoints
+# Include Routers
 app.include_router(auth.router)
+app.include_router(hotels.router)
+app.include_router(bookings.router)
+app.include_router(payments.router)
+app.include_router(coupons.router)
+app.include_router(reviews.router)
 
 @app.get("/")
 def read_root():

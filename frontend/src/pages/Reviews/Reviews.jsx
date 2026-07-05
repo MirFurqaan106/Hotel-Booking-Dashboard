@@ -6,8 +6,11 @@ import './Reviews.css';
 const Reviews = () => {
   const { allBookings } = useDashboard();
   
-  // Local state for user submitted reviews
-  const [userReviews, setUserReviews] = useState([]);
+  // Local state for user submitted reviews initialized with local storage persistence
+  const [userReviews, setUserReviews] = useState(() => {
+    const saved = localStorage.getItem('panun_ghar_user_reviews');
+    return saved ? JSON.parse(saved) : [];
+  });
   
   // Form State
   const [formName, setFormName] = useState('');
@@ -92,7 +95,9 @@ const Reviews = () => {
       comment: formText
     };
 
-    setUserReviews(prev => [newRev, ...prev]);
+    const updated = [newRev, ...userReviews];
+    setUserReviews(updated);
+    localStorage.setItem('panun_ghar_user_reviews', JSON.stringify(updated));
     
     // Feedback toasts
     setToast("Review submitted successfully! Thank you for your feedback.");

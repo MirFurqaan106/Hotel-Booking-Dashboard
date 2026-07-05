@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.endpoints import auth, hotels, bookings, payments, coupons, reviews
+from app.api.endpoints import auth, hotels, bookings, payments, coupons, reviews, admin
 from app.api.deps import get_current_user, RoleChecker
 from app.models.models import User
 
@@ -27,6 +27,7 @@ app.include_router(bookings.router)
 app.include_router(payments.router)
 app.include_router(coupons.router)
 app.include_router(reviews.router)
+app.include_router(admin.router)
 
 @app.get("/")
 def read_root():

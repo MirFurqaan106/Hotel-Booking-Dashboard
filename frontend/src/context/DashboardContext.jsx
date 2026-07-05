@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import bookingsData from '../data/bookings.json';
 import api from '../services/api';
 
 const DashboardContext = createContext();
@@ -13,8 +12,8 @@ export const useDashboard = () => {
 };
 
 export const DashboardProvider = ({ children }) => {
-  // Reactive bookings state
-  const [bookings, setBookings] = useState(bookingsData);
+  // Reactive bookings state initialized clean without mock dataset data
+  const [bookings, setBookings] = useState([]);
 
   const addNewBooking = (newBooking) => {
     setBookings((prev) => [newBooking, ...prev]);

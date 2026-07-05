@@ -21,6 +21,8 @@ const NavbarPublic = () => {
     { name: 'About The Hotel', path: '/about' },
     { name: 'Gallery', path: '/gallery' },
     { name: 'Book Room', path: '/book' },
+    { name: 'FAQ', path: '/faq' },
+    { name: 'Support', path: '/support' },
     { name: 'Customer Reviews', path: '/reviews' },
     { name: 'Contact Us', path: '/contact' }
   ];

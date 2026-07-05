@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { DashboardProvider, useDashboard } from './context/DashboardContext';
 
 // Public Layout Components & Pages
@@ -15,6 +15,8 @@ import HotelDetails from './pages/HotelDetails/HotelDetails';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import UserDashboard from './pages/Dashboard/UserDashboard';
+import FAQ from './pages/FAQ/FAQ';
+import Support from './pages/Support/Support';
 
 // Admin Layout Components & Pages
 import Sidebar from './components/Sidebar/Sidebar';
@@ -33,8 +35,13 @@ const AppContent = () => {
   const location = useLocation();
   const isAdminPath = location.pathname.startsWith('/admin');
   const { sidebarCollapsed } = useDashboard();
+  const token = localStorage.getItem('access_token');
+  const role = localStorage.getItem('user_role');
 
   if (isAdminPath) {
+    if (!token || (role !== 'Admin' && role !== 'Manager')) {
+      return <Navigate to="/login" replace />;
+    }
     // Admin Management Portal
     return (
       <div className={`app-layout ${sidebarCollapsed ? 'collapsed' : ''}`}>
@@ -72,7 +79,11 @@ const AppContent = () => {
           <Route path="/hotel/:id" element={<HotelDetails />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<UserDashboard />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/support" element={<Support />} />
+          <Route path="/dashboard" element={
+            token && role === 'User' ? <UserDashboard /> : <Navigate to="/login" replace />
+          } />
         </Routes>
       </main>
       <FooterPublic />

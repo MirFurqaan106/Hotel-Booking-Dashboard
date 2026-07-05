@@ -19,6 +19,21 @@ def generate_otp() -> str:
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
+    # 0. Role and Password Strength validations
+    if user_in.role_name in ["Manager", "Admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Registration for Manager/Admin accounts is restricted. Please contact system administrators."
+        )
+        
+    import re
+    password_pattern = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$")
+    if not password_pattern.match(user_in.password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character."
+        )
+
     # 1. Check if user already exists
     existing = db.query(User).filter(User.email == user_in.email).first()
     if existing:

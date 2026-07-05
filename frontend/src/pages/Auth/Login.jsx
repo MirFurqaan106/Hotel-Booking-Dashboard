@@ -102,6 +102,27 @@ const Login = () => {
           </button>
         </form>
 
+        <div className="dummy-accounts-grid">
+          <h4>Preconfigured Sandbox Logins</h4>
+          <div className="dummy-grid-container">
+            <div className="dummy-card">
+              <strong>Admin Portal</strong>
+              <p>Email: <code>admin@panunghar.com</code></p>
+              <p>Pass: <code>Admin@123</code></p>
+            </div>
+            <div className="dummy-card">
+              <strong>Manager Desk</strong>
+              <p>Email: <code>manager@panunghar.com</code></p>
+              <p>Pass: <code>Manager@123</code></p>
+            </div>
+            <div className="dummy-card">
+              <strong>Guest User</strong>
+              <p>Email: <code>guest@panunghar.com</code></p>
+              <p>Pass: <code>Guest@123</code></p>
+            </div>
+          </div>
+        </div>
+
         <div className="auth-footer-links">
           <p>Don't have an account? <Link to="/register">Register here</Link></p>
         </div>

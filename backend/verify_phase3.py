@@ -31,10 +31,10 @@ def verify_business_logic():
     room_id = rooms[0].get("id")
 
     # 3. Retrieve login token for Aarav Sharma (Customer account seeded)
-    print("[Verification] Log in as Customer (aarav@example.com)...")
+    print("[Verification] Log in as Customer (guest@panunghar.com)...")
     login_res = client.post(
         "/auth/login",
-        data={"username": "aarav@example.com", "password": "User@123"}
+        data={"username": "guest@panunghar.com", "password": "User@123"}
     )
     assert login_res.status_code == 200, "Customer login failed"
     token = login_res.json().get("access_token")

@@ -25,8 +25,13 @@ const Register = () => {
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    setErrorMsg('');
-    setLoading(true);
+    // Password criteria validation
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      setErrorMsg("Password must be at least 8 characters long, containing uppercase, lowercase, numeric, and special characters.");
+      setLoading(false);
+      return;
+    }
 
     try {
       await api.post('/auth/register', {
@@ -140,13 +145,7 @@ const Register = () => {
             </div>
           </div>
 
-          <div className="auth-group">
-            <label>Register As Role</label>
-            <select value={role} onChange={(e) => setRole(e.target.value)} className="auth-select">
-              <option value="User">Guest Customer (Browse & Book)</option>
-              <option value="Manager">Hotel Manager (Manage rooms & rates)</option>
-            </select>
-          </div>
+          {/* Role selection is deleted since manager accounts are restricted to admin panels creation */}
 
           <button type="submit" className="auth-submit-btn" disabled={loading}>
             <span>{loading ? 'Creating Account...' : 'Register'}</span>

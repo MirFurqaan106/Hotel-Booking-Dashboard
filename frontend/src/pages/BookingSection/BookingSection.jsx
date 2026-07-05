@@ -1,329 +1,271 @@
-import React, { useState } from 'react';
-import { useDashboard } from '../../context/DashboardContext';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
-  FiMail, 
-  FiMessageSquare, 
   FiCalendar, 
+  FiDollarSign, 
   FiCheckCircle, 
-  FiUser, 
-  FiMapPin, 
-  FiDollarSign,
-  FiSliders,
-  FiBriefcase
+  FiX, 
+  FiMail, 
+  FiMessageSquare,
+  FiAlertCircle
 } from 'react-icons/fi';
+import api from '../../services/api';
+import hotelRoom from '../../assets/hotel-room.jpg';
 import './BookingSection.css';
 
 const BookingSection = () => {
-  const { allBookings, addNewBooking } = useDashboard();
+  const navigate = useNavigate();
+  const [rooms, setRooms] = useState([]);
+  const [loading, setLoading] = useState(true);
   
-  // Local Form state
-  const [formData, setFormData] = useState({
-    guestName: '',
-    age: '28',
-    gender: 'Male',
-    country: 'India',
-    roomType: 'Single Room',
-    roomNumber: '101',
-    checkIn: '',
-    checkOut: '',
-    paymentMethod: 'Credit Card',
-    revenue: '150'
-  });
+  // Search Inputs
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [paymentOption, setPaymentOption] = useState('Later');
+  const [errorMsg, setErrorMsg] = useState('');
 
-  // Booking outcome details for modal
-  const [confirmedBooking, setConfirmedBooking] = useState(null);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  // Outcome states
+  const [bookingConfirmed, setBookingConfirmed] = useState(null);
+  const [showPayModal, setShowPayModal] = useState(false);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const fetchRooms = async () => {
+    setLoading(true);
+    try {
+      // Hotel ID 1 is seeded as Panun Ghar Resort
+      const res = await api.get('/hotels/1/rooms');
+      setRooms(res.data);
+    } catch (err) {
+      console.error("Error loading rooms details:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleBookRoom = (e) => {
+  useEffect(() => {
+    fetchRooms();
+  }, []);
+
+  const handleBookClick = (room) => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+    setSelectedRoom(room);
+    setErrorMsg('');
+  };
+
+  const handleBookingSubmit = async (e) => {
     e.preventDefault();
+    setErrorMsg('');
+    try {
+      const res = await api.post('/bookings', {
+        room_id: selectedRoom.id,
+        check_in: checkIn,
+        check_out: checkOut,
+        payment_option: paymentOption
+      });
 
-    // Generate unique ID
-    const nextId = allBookings.length + 1001;
-    const newId = `HB-${nextId}`;
+      const newBooking = res.data;
+      setBookingConfirmed(newBooking);
 
-    const newBookingObj = {
-      BookingID: newId,
-      GuestName: formData.guestName,
-      Age: parseInt(formData.age),
-      Gender: formData.gender,
-      Country: formData.country,
-      HotelName: 'Panun Ghar',
-      RoomType: formData.roomType,
-      RoomNumber: parseInt(formData.roomNumber),
-      BookingDate: new Date().toISOString().split('T')[0],
-      CheckIn: formData.checkIn,
-      CheckOut: formData.checkOut,
-      BookingSource: 'Direct',
-      PaymentMethod: formData.paymentMethod,
-      BookingStatus: 'Confirmed',
-      PaymentStatus: 'Paid',
-      Revenue: parseInt(formData.revenue),
-      Rating: null
-    };
-
-    // Inject to global context
-    addNewBooking(newBookingObj);
-
-    // Save for notifications mapping
-    setConfirmedBooking(newBookingObj);
-    setShowConfirmModal(true);
+      if (paymentOption === 'Later') {
+        setSelectedRoom(null);
+      } else {
+        setShowPayModal(true);
+        setSelectedRoom(null);
+      }
+    } catch (err) {
+      setErrorMsg(err.response?.data?.detail || "Booking failed. Verify stay dates scheduling slots.");
+    }
   };
 
-  // 1. Gmail mailto handler
+  const handlePaymentVerify = async () => {
+    try {
+      const payAmount = paymentOption === 'Token' ? 100 : bookingConfirmed.total_amount;
+      await api.post('/payments/verify', {
+        booking_id: bookingConfirmed.id,
+        transaction_id: `txn_razorpay_${Date.now()}`,
+        amount: payAmount,
+        payment_status: 'Success'
+      });
+      
+      setBookingConfirmed(prev => ({
+        ...prev,
+        booking_status: 'Confirmed',
+        paid_amount: payAmount
+      }));
+      setShowPayModal(false);
+    } catch (err) {
+      console.error("Payment verify failed:", err);
+    }
+  };
+
   const sendEmailAlert = () => {
-    if (!confirmedBooking) return;
-    const subject = encodeURIComponent(`[Panun Ghar] New Room Reservation: ${confirmedBooking.BookingID}`);
+    if (!bookingConfirmed) return;
+    const subject = encodeURIComponent(`[Panun Ghar] Stay Reservation: ${bookingConfirmed.booking_code}`);
     const body = encodeURIComponent(
       `Dear Mir Furqaan,\n\n` +
-      `We have received a new booking reservation at Panun Ghar:\n\n` +
-      `- Booking Ref ID: ${confirmedBooking.BookingID}\n` +
-      `- Guest Full Name: ${confirmedBooking.GuestName} (${confirmedBooking.Age} y/o)\n` +
-      `- Country of Origin: ${confirmedBooking.Country}\n` +
-      `- Reserved Room: ${confirmedBooking.RoomType} (Room ${confirmedBooking.RoomNumber})\n` +
-      `- Stay Timeline: ${confirmedBooking.CheckIn} to ${confirmedBooking.CheckOut}\n` +
-      `- Amount Received: $${confirmedBooking.Revenue} via ${confirmedBooking.PaymentMethod}\n\n` +
-      `Kind Regards,\n` +
-      `Panun Ghar Customer Desk`
+      `A guest has placed a stay booking at Panun Ghar:\n\n` +
+      `- Ref ID: ${bookingConfirmed.booking_code}\n` +
+      `- Scheduled: ${bookingConfirmed.check_in} to ${bookingConfirmed.check_out}\n` +
+      `- Paid Amount: $${bookingConfirmed.paid_amount}\n` +
+      `System Email: mirfurkaan106@gmail.com`
     );
     window.location.href = `mailto:mirfurkaan106@gmail.com?subject=${subject}&body=${body}`;
   };
 
-  // 2. WhatsApp API handler
   const sendWhatsAppAlert = () => {
-    if (!confirmedBooking) return;
+    if (!bookingConfirmed) return;
     const message = encodeURIComponent(
-      `*Panun Ghar Luxury Resort*\n` +
-      `*New Booking Alert!*\n\n` +
-      `• *Booking ID*: ${confirmedBooking.BookingID}\n` +
-      `• *Guest Name*: ${confirmedBooking.GuestName}\n` +
-      `• *Room Reserved*: ${confirmedBooking.RoomType} (${confirmedBooking.RoomNumber})\n` +
-      `• *Check-In*: ${confirmedBooking.CheckIn}\n` +
-      `• *Check-Out*: ${confirmedBooking.CheckOut}\n` +
-      `• *Amount*: $${confirmedBooking.Revenue}\n` +
-      `• *Method*: ${confirmedBooking.PaymentMethod}\n\n` +
-      `Please check dashboard analytics.`
+      `*Panun Ghar Resort Stay*\n` +
+      `• *Booking ID*: ${bookingConfirmed.booking_code}\n` +
+      `• *Dates*: ${bookingConfirmed.check_in} to ${bookingConfirmed.check_out}\n` +
+      `• *Paid Amount*: $${bookingConfirmed.paid_amount}`
     );
     window.open(`https://wa.me/917889984798?text=${message}`, '_blank');
   };
 
-  const handleCloseModal = () => {
-    setShowConfirmModal(false);
-    setConfirmedBooking(null);
-    // Reset Form
-    setFormData({
-      guestName: '',
-      age: '28',
-      gender: 'Male',
-      country: 'India',
-      roomType: 'Single Room',
-      roomNumber: '101',
-      checkIn: '',
-      checkOut: '',
-      paymentMethod: 'Credit Card',
-      revenue: '150'
-    });
-  };
+  if (loading) return <div className="loading-spinner-box">Retrieving Panun Ghar suites...</div>;
 
   return (
     <div className="booking-section-page page-container animate-fade-in">
-      <div className="booking-sect-header">
-        <h1>Book Your Stay at Panun Ghar</h1>
-        <p>Select your dates, enter guest particulars, and confirm your luxury Kashmiri reservation today.</p>
+      <div className="section-title-box">
+        <h2>Book Your Stay at Panun Ghar</h2>
+        <p>Input check-in and check-out dates to view rates and verify slots.</p>
       </div>
 
-      <div className="booking-grid-wrapper">
-        
-        {/* Left Side: Booking Form */}
-        <div className="booking-form-panel card glass-panel">
-          <div className="sect-title">
-            <FiSliders size={18} className="text-primary" />
-            <h3>Reservation Details</h3>
-          </div>
-
-          <form onSubmit={handleBookRoom} className="public-booking-form">
-            <div className="pub-form-row">
-              <div className="pub-form-group">
-                <label>Guest Full Name</label>
-                <div className="pub-input-wrapper">
-                  <FiUser className="pub-icon" size={14} />
-                  <input 
-                    type="text" 
-                    name="guestName"
-                    value={formData.guestName}
-                    onChange={handleInputChange}
-                    placeholder="e.g. Suhail Bhat"
-                    required
-                  />
-                </div>
-              </div>
+      {/* Main suite grid */}
+      <div className="booking-suites-grid">
+        {rooms.map((room) => (
+          <div key={room.id} className="suite-catalog-card card glass-panel">
+            <img src={hotelRoom} alt={room.room_type} className="suite-img" />
+            <div className="suite-details">
+              <h3>{room.room_type}</h3>
+              <span className="suite-number-label">Room Number: {room.room_number}</span>
+              <p className="suite-amenities">🎬 Cinema Lounger access • Heated pool • Free breakfast</p>
               
-              <div className="pub-form-group-sub">
-                <div className="pub-form-group">
-                  <label>Age</label>
-                  <input 
-                    type="number" 
-                    name="age"
-                    value={formData.age}
-                    onChange={handleInputChange}
-                    min={18}
-                    max={90}
-                    required
-                  />
+              <div className="suite-footer">
+                <div className="suite-price">
+                  <strong>${room.price_per_night}</strong>
+                  <span>/ Night</span>
                 </div>
-                <div className="pub-form-group">
-                  <label>Gender</label>
-                  <select name="gender" value={formData.gender} onChange={handleInputChange}>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Non-binary">Non-binary</option>
-                  </select>
-                </div>
+                <button 
+                  className="suite-book-btn"
+                  onClick={() => handleBookClick(room)}
+                >
+                  Book Category
+                </button>
               </div>
             </div>
-
-            <div className="pub-form-row">
-              <div className="pub-form-group">
-                <label>Origin Country</label>
-                <div className="pub-input-wrapper">
-                  <FiMapPin className="pub-icon" size={14} />
-                  <input 
-                    type="text" 
-                    name="country"
-                    value={formData.country}
-                    onChange={handleInputChange}
-                    placeholder="e.g. India"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="pub-form-group">
-                <label>Room Category</label>
-                <select name="roomType" value={formData.roomType} onChange={handleInputChange}>
-                  <option value="Single Room">Single Room ($90/N)</option>
-                  <option value="Double Room">Double Room ($140/N)</option>
-                  <option value="Deluxe Suite">Deluxe Suite ($240/N)</option>
-                  <option value="President Suite">President Suite ($550/N)</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="pub-form-row">
-              <div className="pub-form-group">
-                <label>Desired Room Number</label>
-                <input 
-                  type="number" 
-                  name="roomNumber"
-                  value={formData.roomNumber}
-                  onChange={handleInputChange}
-                  min={101}
-                  max={520}
-                  required
-                />
-              </div>
-
-              <div className="pub-form-group">
-                <label>Estimated Amount ($)</label>
-                <div className="pub-input-wrapper">
-                  <FiDollarSign className="pub-icon" size={14} />
-                  <input 
-                    type="number" 
-                    name="revenue"
-                    value={formData.revenue}
-                    onChange={handleInputChange}
-                    min={1}
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="pub-form-row">
-              <div className="pub-form-group">
-                <label>Check-In Date</label>
-                <input 
-                  type="date" 
-                  name="checkIn"
-                  value={formData.checkIn}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="pub-form-group">
-                <label>Check-Out Date</label>
-                <input 
-                  type="date" 
-                  name="checkOut"
-                  value={formData.checkOut}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="pub-form-row">
-              <div className="pub-form-group">
-                <label>Payment Method</label>
-                <select name="paymentMethod" value={formData.paymentMethod} onChange={handleInputChange}>
-                  <option value="Credit Card">Credit Card</option>
-                  <option value="PayPal">PayPal</option>
-                  <option value="Cash">Cash</option>
-                  <option value="Bank Transfer">Bank Transfer</option>
-                </select>
-              </div>
-            </div>
-
-            <button type="submit" className="pub-submit-btn">
-              Confirm & Book Room
-            </button>
-          </form>
-        </div>
-
-        {/* Right Side: Information Block */}
-        <div className="booking-info-panel card">
-          <div className="sect-title">
-            <FiBriefcase size={18} className="text-warning" />
-            <h3>Booking Policy</h3>
           </div>
-          <ul className="policy-list">
-            <li><strong>Check-in:</strong> Starts from 2:00 PM. Front desk operates 24/7.</li>
-            <li><strong>Check-out:</strong> Closes at 12:00 PM. Late check-outs may incur a charge.</li>
-            <li><strong>Notification:</strong> After checking room availability and confirming, you will be prompted to send the notifications to email & WhatsApp.</li>
-            <li><strong>Support:</strong> Direct call support operates during business hours at <strong>+91 78899 84798</strong>.</li>
-          </ul>
-        </div>
+        ))}
       </div>
 
-      {/* Success Notification Modal overlay */}
-      {showConfirmModal && confirmedBooking && (
+      {/* Date Select & Booking Checkout Modal */}
+      {selectedRoom && (
+        <div className="modal-backdrop">
+          <div className="checkout-modal card glass-panel animate-fade-in">
+            <div className="modal-header">
+              <h3>Checkout: Room {selectedRoom.room_number}</h3>
+              <button className="close-modal-btn" onClick={() => setSelectedRoom(null)}>
+                <FiX size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleBookingSubmit} className="checkout-form">
+              {errorMsg && (
+                <div className="error-alert-box">
+                  <FiAlertCircle size={16} />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
+
+              <div className="form-row-group">
+                <div className="grp">
+                  <label>Check-In Date</label>
+                  <input 
+                    type="date" 
+                    value={checkIn}
+                    onChange={(e) => setCheckIn(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="grp">
+                  <label>Check-Out Date</label>
+                  <input 
+                    type="date" 
+                    value={checkOut}
+                    onChange={(e) => setCheckOut(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grp">
+                <label>Payment Mode</label>
+                <select 
+                  value={paymentOption}
+                  onChange={(e) => setPaymentOption(e.target.value)}
+                >
+                  <option value="Later">Pay Later during Check-In ($0 now)</option>
+                  <option value="Token">Pay Token advance ($100 now)</option>
+                  <option value="Full">Pay Full amount now</option>
+                </select>
+              </div>
+
+              <button type="submit" className="confirm-booking-btn">
+                Confirm Reservation
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Razorpay simulation */}
+      {showPayModal && bookingConfirmed && (
+        <div className="modal-backdrop">
+          <div className="razorpay-simulation-modal card glass-panel animate-fade-in">
+            <div className="rzp-header">
+              <span className="rzp-badge">Razorpay Secure Checkout</span>
+              <h3>Verify simulated gateway transaction</h3>
+              <p>Reference: <strong>{bookingConfirmed.booking_code}</strong></p>
+            </div>
+            <div className="rzp-details">
+              <p>Amount to Charge: <strong>${paymentOption === 'Token' ? 100 : bookingConfirmed.total_amount}</strong></p>
+            </div>
+            <button className="rzp-pay-success-btn" onClick={handlePaymentVerify}>
+              Simulate Successful Payment Verified Check
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {bookingConfirmed && !showPayModal && (
         <div className="modal-backdrop">
           <div className="success-modal card glass-panel animate-fade-in">
             <div className="success-icon-header">
               <FiCheckCircle size={54} className="text-success" />
-              <h2>Booking Confirmed!</h2>
-              <p className="booking-ref-txt">Reference ID: <strong>{confirmedBooking.BookingID}</strong></p>
+              <h2>Booking Placed Successfully!</h2>
+              <p className="booking-ref-txt">Reference ID: <strong>{bookingConfirmed.booking_code}</strong></p>
             </div>
 
             <div className="success-details-box">
-              <p>Room reserved: <strong>{confirmedBooking.RoomType}</strong> (Room {confirmedBooking.RoomNumber})</p>
-              <p>Stay Schedule: <strong>{confirmedBooking.CheckIn} to {confirmedBooking.CheckOut}</strong></p>
-              <p>Total Revenue: <strong>${confirmedBooking.Revenue}</strong></p>
+              <p>Stay Schedule: <strong>{bookingConfirmed.check_in} to {bookingConfirmed.check_out}</strong></p>
+              <p>Total Stay Cost: <strong>${bookingConfirmed.total_amount}</strong></p>
+              <p>Amount Paid: <strong>${bookingConfirmed.paid_amount}</strong></p>
+              <p>Booking Status: <strong>{bookingConfirmed.booking_status}</strong></p>
             </div>
 
             <div className="notification-actions-box">
-              <p className="act-txt">Please trigger the notification alerts for manager <strong>Mir Furqaan</strong>:</p>
-              
+              <p className="act-txt">Alert Manager <strong>Mir Furqaan</strong> via Gmail or WhatsApp:</p>
               <div className="actions-vertical-grid">
                 <button className="notify-btn gmail-btn" onClick={sendEmailAlert}>
                   <FiMail size={16} />
                   <span>Send Notification via Gmail</span>
                 </button>
-                
                 <button className="notify-btn whatsapp-btn" onClick={sendWhatsAppAlert}>
                   <FiMessageSquare size={16} />
                   <span>Send Notification via WhatsApp</span>
@@ -331,8 +273,8 @@ const BookingSection = () => {
               </div>
             </div>
 
-            <button className="close-success-modal-btn" onClick={handleCloseModal}>
-              Return to Bookings
+            <button className="close-success-modal-btn" onClick={() => setBookingConfirmed(null)}>
+              Return to Booking List
             </button>
           </div>
         </div>

@@ -34,7 +34,7 @@ def seed_database():
         
         # Admin User
         admin_user = User(
-            email="mirfurkaan106@gmail.com",
+            email="admin@panunghar.com",
             hashed_password=admin_pass,
             full_name="Mir Furqaan",
             phone="+91 7889984798",
@@ -44,7 +44,7 @@ def seed_database():
         )
         # Manager User
         manager_user = User(
-            email="suhail.bhat@example.com",
+            email="manager@panunghar.com",
             hashed_password=manager_pass,
             full_name="Suhail Bhat",
             phone="+91 94190 11223",
@@ -54,7 +54,7 @@ def seed_database():
         )
         # Registered Customer
         registered_user = User(
-            email="aarav@example.com",
+            email="guest@panunghar.com",
             hashed_password=user_pass,
             full_name="Aarav Sharma",
             phone="+91 91490 55667",

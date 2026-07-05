@@ -169,7 +169,8 @@ class PaymentResponse(BaseModel):
 # ==========================================
 
 class ReviewCreate(BaseModel):
-    booking_id: int
+    booking_id: Optional[int] = None
+    guest_name: Optional[str] = None
     rating: int = Field(..., ge=1, le=5)
     comment: Optional[str] = None
 
@@ -180,8 +181,9 @@ class ReviewReply(BaseModel):
 
 class ReviewResponse(BaseModel):
     id: int
-    booking_id: int
-    user_id: int
+    booking_id: Optional[int] = None
+    user_id: Optional[int] = None
+    guest_name: Optional[str] = None
     rating: int
     comment: Optional[str] = None
     response: Optional[str] = None

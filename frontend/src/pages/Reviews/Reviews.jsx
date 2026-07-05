@@ -18,6 +18,28 @@ const Reviews = () => {
   const [formText, setFormText] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [toast, setToast] = useState('');
+  const [dbReviews, setDbReviews] = useState([]);
+
+  const fetchDbReviews = async () => {
+    try {
+      const res = await api.get('/reviews');
+      const mapped = res.data.map(r => ({
+        id: `DB-REV-${r.id}`,
+        name: r.guest_name || r.user?.full_name || 'Anonymous Guest',
+        rating: r.rating,
+        roomType: 'Heritage Suite Stayer',
+        date: new Date(r.created_at).toISOString().split('T')[0],
+        comment: r.comment
+      }));
+      setDbReviews(mapped);
+    } catch (err) {
+      console.error("Failed to load reviews from SQLite backend:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchDbReviews();
+  }, []);
 
   // 1. Gather all default reviews from Checked Out bookings
   const defaultReviews = useMemo(() => {
@@ -62,10 +84,10 @@ const Reviews = () => {
     return reviews;
   }, [allBookings]);
 
-  // Combine default reviews and user submitted reviews
+  // Combine default reviews, database reviews and user submitted reviews
   const allReviewsList = useMemo(() => {
-    return [...userReviews, ...defaultReviews];
-  }, [userReviews, defaultReviews]);
+    return [...userReviews, ...dbReviews, ...defaultReviews];
+  }, [userReviews, dbReviews, defaultReviews]);
 
   // Calculate Average Rating stats
   const stats = useMemo(() => {
@@ -83,21 +105,34 @@ const Reviews = () => {
     return { total, avg, counts };
   }, [allReviewsList]);
 
-  const handleSubmitReview = (e) => {
+  const handleSubmitReview = async (e) => {
     e.preventDefault();
+    const token = localStorage.getItem('access_token');
 
-    const newRev = {
-      id: `REV-${Date.now()}`,
-      name: formName,
-      rating: parseInt(formRating),
-      roomType: 'Walk-In Guest',
-      date: new Date().toISOString().split('T')[0],
-      comment: formText
-    };
+    if (token) {
+      try {
+        await api.post('/reviews', {
+          rating: parseInt(formRating),
+          comment: formText
+        });
+        fetchDbReviews();
+      } catch (err) {
+        console.error("Failed to save review in database:", err);
+      }
+    } else {
+      const newRev = {
+        id: `REV-${Date.now()}`,
+        name: formName || 'Anonymous Guest',
+        rating: parseInt(formRating),
+        roomType: 'Walk-In Guest',
+        date: new Date().toISOString().split('T')[0],
+        comment: formText
+      };
 
-    const updated = [newRev, ...userReviews];
-    setUserReviews(updated);
-    localStorage.setItem('panun_ghar_user_reviews', JSON.stringify(updated));
+      const updated = [newRev, ...userReviews];
+      setUserReviews(updated);
+      localStorage.setItem('panun_ghar_user_reviews', JSON.stringify(updated));
+    }
     
     // Feedback toasts
     setToast("Review submitted successfully! Thank you for your feedback.");

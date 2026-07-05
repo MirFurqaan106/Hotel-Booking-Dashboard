@@ -20,39 +20,41 @@ def submit_review(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # 1. Retrieve and validate booking
-    booking = db.query(Booking).filter(Booking.id == review_in.booking_id).first()
-    if not booking:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Booking reservation not found"
-        )
-        
-    # Verify booking ownership
-    if booking.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Operation rejected: You do not own this booking"
-        )
-        
-    # Verify stay complete
-    if booking.booking_status != "Checked Out":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Reviews can only be submitted for completed stay checkouts"
-        )
-        
-    # Check if review already exists
-    existing = db.query(Review).filter(Review.booking_id == review_in.booking_id).first()
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Review already submitted for this reservation"
-        )
+    if review_in.booking_id:
+        # 1. Retrieve and validate booking
+        booking = db.query(Booking).filter(Booking.id == review_in.booking_id).first()
+        if not booking:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Booking reservation not found"
+            )
+            
+        # Verify booking ownership
+        if booking.user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Operation rejected: You do not own this booking"
+            )
+            
+        # Verify stay complete
+        if booking.booking_status != "Checked Out":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Reviews can only be submitted for completed stay checkouts"
+            )
+            
+        # Check if review already exists
+        existing = db.query(Review).filter(Review.booking_id == review_in.booking_id).first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Review already submitted for this reservation"
+            )
         
     new_review = Review(
         booking_id=review_in.booking_id,
         user_id=current_user.id,
+        guest_name=current_user.full_name,
         rating=review_in.rating,
         comment=review_in.comment
     )

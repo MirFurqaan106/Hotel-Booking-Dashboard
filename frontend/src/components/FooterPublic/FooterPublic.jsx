@@ -5,6 +5,9 @@ import './FooterPublic.css';
 
 const FooterPublic = () => {
   const currentYear = new Date().getFullYear();
+  const token = localStorage.getItem('access_token');
+  const role = localStorage.getItem('user_role');
+  const showManagerLink = token && (role === 'Admin' || role === 'Manager');
 
   return (
     <footer className="footer-public card">
@@ -25,11 +28,11 @@ const FooterPublic = () => {
           <h4>Navigation</h4>
           <ul>
             <li><Link to="/">Home</Link></li>
-            <li><Link to="/about">About Hotel</Link></li>
+            <li><Link to="/about">Know Us</Link></li>
             <li><Link to="/gallery">Gallery</Link></li>
             <li><Link to="/book">Book Room</Link></li>
-            <li><Link to="/reviews">Customer Reviews</Link></li>
-            <li><Link to="/contact">Contact Us</Link></li>
+            <li><Link to="/reviews">Reviews</Link></li>
+            <li><Link to="/support">Support</Link></li>
           </ul>
         </div>
 
@@ -53,14 +56,16 @@ const FooterPublic = () => {
         </div>
 
         {/* Portals */}
-        <div className="footer-col portals-col">
-          <h4>Management</h4>
-          <p className="portal-desc">Access secure analytical indicators, occupancy tracking, and transaction summaries.</p>
-          <Link to="/admin" className="footer-portal-link">
-            <FiLock size={12} />
-            <span>Manager Portal</span>
-          </Link>
-        </div>
+        {showManagerLink && (
+          <div className="footer-col portals-col">
+            <h4>Management</h4>
+            <p className="portal-desc">Access secure analytical indicators, occupancy tracking, and transaction summaries.</p>
+            <Link to="/admin" className="footer-portal-link">
+              <FiLock size={12} />
+              <span>Manager Portal</span>
+            </Link>
+          </div>
+        )}
       </div>
 
       <div className="footer-bottom">

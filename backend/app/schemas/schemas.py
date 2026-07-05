@@ -250,3 +250,13 @@ class RazorpaySignatureVerify(BaseModel):
     razorpay_order_id: str
     razorpay_signature: str
 
+
+# ==========================================
+# PASSWORD CHANGE SCHEMA
+# ==========================================
+
+class PasswordChangeRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+

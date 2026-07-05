@@ -22,8 +22,8 @@ const NavbarPublic = () => {
     { name: 'Gallery', path: '/gallery' },
     { name: 'Book Room', path: '/book' },
     { name: 'FAQ', path: '/faq' },
-    { name: 'Support & Contact', path: '/support' },
-    { name: 'Customer Reviews', path: '/reviews' }
+    { name: 'Support', path: '/support' },
+    { name: 'Reviews', path: '/reviews' }
   ];
 
   return (
@@ -105,12 +105,14 @@ const NavbarPublic = () => {
                   </NavLink>
                 </li>
               ))}
-              <li className="mobile-portal-item">
-                <Link to="/admin" className="mobile-portal-link" onClick={() => setMenuOpen(false)}>
-                  <FiLock size={14} />
-                  <span>Manager Portal</span>
-                </Link>
-              </li>
+              {token && (role === 'Admin' || role === 'Manager') && (
+                <li className="mobile-portal-item">
+                  <Link to="/admin" className="mobile-portal-link" onClick={() => setMenuOpen(false)}>
+                    <FiLock size={14} />
+                    <span>Manager Portal</span>
+                  </Link>
+                </li>
+              )}
             </ul>
           </nav>
         </div>

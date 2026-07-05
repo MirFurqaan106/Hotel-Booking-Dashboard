@@ -9,7 +9,8 @@ import {
   FiTrash2, 
   FiAlertCircle, 
   FiCheckCircle, 
-  FiLogOut 
+  FiLogOut,
+  FiLock
 } from 'react-icons/fi';
 import api from '../../services/api';
 import './UserDashboard.css';
@@ -26,6 +27,12 @@ const UserDashboard = () => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState('');
   
+  // Password Change States
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
   const [toastMsg, setToastMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -53,11 +60,11 @@ const UserDashboard = () => {
     if (!window.confirm("Are you sure you want to cancel this booking?")) return;
     try {
       await api.post(`/bookings/${bookingId}/cancel`);
-      setToastMsg("Booking cancelled successfully.");
-      setTimeout(() => setToastMsg(''), 3000);
+      setToastMsg("Booking cancelled successfully!");
       fetchDashboardData();
+      setTimeout(() => setToastMsg(''), 3000);
     } catch (err) {
-      alert(err.response?.data?.detail || "Cancellation failed.");
+      alert(err.response?.data?.detail || "Cancellation failed. Rooms already checked out or cancel window exceeded.");
     }
   };
 
@@ -66,27 +73,51 @@ const UserDashboard = () => {
     try {
       await api.post('/reviews', {
         booking_id: selectedBookingForReview.id,
-        rating: rating,
-        comment: comment
+        rating,
+        comment
       });
-      setToastMsg("Review submitted successfully! Thank you.");
-      setTimeout(() => setToastMsg(''), 3000);
+      setToastMsg("Thank you for your stay feedback!");
       setSelectedBookingForReview(null);
       setRating(5);
       setComment('');
-      fetchDashboardData();
+      setTimeout(() => setToastMsg(''), 3000);
     } catch (err) {
-      alert(err.response?.data?.detail || "Review submission failed.");
+      alert(err.response?.data?.detail || "Failed to submit review.");
     }
   };
 
-  const handleSignOut = () => {
-    localStorage.clear();
-    navigate('/');
+  const handleChangePasswordSubmit = async (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    
+    if (newPassword !== confirmNewPassword) {
+      setPasswordError("New passwords do not match.");
+      return;
+    }
+    
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      setPasswordError("Password must be at least 8 characters and contain at least one uppercase letter, one lowercase letter, one number, and one special character.");
+      return;
+    }
+    
+    try {
+      await api.post('/auth/change-password', {
+        current_password: currentPassword,
+        new_password: newPassword
+      });
+      setToastMsg("Password changed successfully!");
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+      setActiveTab('bookings');
+      setTimeout(() => setToastMsg(''), 3000);
+    } catch (err) {
+      setPasswordError(err.response?.data?.detail || "Error changing password. Ensure current password is correct.");
+    }
   };
 
-  const handleDownloadInvoice = (booking) => {
-    // Print window simulator for invoices
+  const printInvoice = (booking) => {
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
       <html>
@@ -111,15 +142,15 @@ const UserDashboard = () => {
           <hr />
           <div class="item">
             <span>Room Reservation Fee</span>
-            <span>₹{booking.total_amount}</span>
+            <span>₹${booking.total_amount}</span>
           </div>
           <div class="item">
             <span>Amount Paid</span>
-            <span>₹{booking.paid_amount}</span>
+            <span>₹${booking.paid_amount}</span>
           </div>
           <div class="item" style="font-weight: bold; font-size: 1.1em;">
             <span>Outstanding Balance</span>
-            <span>₹{booking.total_amount - booking.paid_amount}</span>
+            <span>₹${booking.total_amount - booking.paid_amount}</span>
           </div>
           <div class="footer">
             <p>Thank you for choosing Panun Ghar, Kashmir.</p>
@@ -130,6 +161,11 @@ const UserDashboard = () => {
     `);
     printWindow.document.close();
     printWindow.print();
+  };
+
+  const handleSignOut = () => {
+    localStorage.clear();
+    window.location.href = '/';
   };
 
   if (loading) return <div className="loading-spinner-box">Loading your dashboard...</div>;
@@ -180,6 +216,14 @@ const UserDashboard = () => {
             <FiDollarSign size={16} />
             <span>Payment History</span>
           </button>
+
+          <button 
+            className={`dash-nav-btn ${activeTab === 'security' ? 'active' : ''}`}
+            onClick={() => setActiveTab('security')}
+          >
+            <FiLock size={16} />
+            <span>Change Password</span>
+          </button>
         </div>
 
         {/* Content Panel */}
@@ -204,29 +248,20 @@ const UserDashboard = () => {
                       </div>
 
                       <div className="book-card-actions">
-                        <button 
-                          className="btn-invoice"
-                          onClick={() => handleDownloadInvoice(booking)}
-                        >
+                        <button className="dash-act-btn print-btn" onClick={() => printInvoice(booking)}>
                           <FiFileText size={14} />
                           <span>Print Invoice</span>
                         </button>
-
+                        
                         {booking.booking_status === 'Checked Out' && (
-                          <button 
-                            className="btn-review"
-                            onClick={() => setSelectedBookingForReview(booking)}
-                          >
+                          <button className="dash-act-btn review-btn" onClick={() => setSelectedBookingForReview(booking)}>
                             <FiStar size={14} />
                             <span>Leave Review</span>
                           </button>
                         )}
 
-                        {(booking.booking_status === 'Pending' || booking.booking_status === 'Confirmed') && (
-                          <button 
-                            className="btn-cancel"
-                            onClick={() => handleCancelBooking(booking.id)}
-                          >
+                        {booking.booking_status === 'Confirmed' && (
+                          <button className="dash-act-btn cancel-btn" onClick={() => handleCancelBooking(booking.id)}>
                             <FiTrash2 size={14} />
                             <span>Cancel Stay</span>
                           </button>
@@ -235,7 +270,9 @@ const UserDashboard = () => {
                     </div>
                   ))
                 ) : (
-                  <div className="empty-hotels-box card">No room reservations found. Search and book from the home catalog!</div>
+                  <div className="empty-dash-list card">
+                    <p>No stays or checkout logs located. Visit room booking to plan your reservation!</p>
+                  </div>
                 )}
               </div>
             </div>
@@ -282,49 +319,103 @@ const UserDashboard = () => {
               </div>
             </div>
           )}
+
+          {activeTab === 'security' && (
+            <div className="dashboard-sub-section">
+              <h3>Security Settings</h3>
+              <div className="dash-bookings-vertical-list card glass-panel" style={{ padding: '2rem' }}>
+                <form onSubmit={handleChangePasswordSubmit} className="checkout-form" style={{ maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {passwordError && (
+                    <div className="error-alert-box">
+                      <FiAlertCircle size={16} />
+                      <span>{passwordError}</span>
+                    </div>
+                  )}
+
+                  <div className="grp" style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>Current Password</label>
+                    <input 
+                      type="password" 
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      style={{ padding: '0.65rem 0.85rem', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-main)', outline: 'none' }}
+                    />
+                  </div>
+
+                  <div className="grp" style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>New Password</label>
+                    <input 
+                      type="password" 
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      style={{ padding: '0.65rem 0.85rem', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-main)', outline: 'none' }}
+                    />
+                  </div>
+
+                  <div className="grp" style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>Confirm New Password</label>
+                    <input 
+                      type="password" 
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      style={{ padding: '0.65rem 0.85rem', backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', color: 'var(--text-main)', outline: 'none' }}
+                    />
+                  </div>
+
+                  <button type="submit" className="confirm-booking-btn" style={{ padding: '0.75rem', fontWeight: 700, fontSize: '0.9rem', width: '100%', marginTop: '0.5rem' }}>
+                    Save Password Changes
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Review Dialog modal */}
+      {/* Review Modal */}
       {selectedBookingForReview && (
         <div className="modal-backdrop">
-          <div className="review-modal card glass-panel animate-fade-in">
+          <div className="checkout-modal card glass-panel animate-fade-in">
             <div className="modal-header">
               <h3>Review stay: {selectedBookingForReview.booking_code}</h3>
-              <button className="close-modal-btn" onClick={() => setSelectedBookingForReview(null)}>×</button>
+              <button className="close-modal-btn" onClick={() => setSelectedBookingForReview(null)}>
+                ×
+              </button>
             </div>
-
-            <form onSubmit={handleReviewSubmit} className="review-submit-form">
+            <form onSubmit={handleReviewSubmit} className="checkout-form">
               <div className="grp">
-                <label>Rating Stars</label>
-                <select value={rating} onChange={(e) => setRating(e.target.value)} className="auth-select">
-                  <option value={5}>5 Stars (Excellent)</option>
-                  <option value={4}>4 Stars (Very Good)</option>
-                  <option value={3}>3 Stars (Good)</option>
-                  <option value={2}>2 Stars (Average)</option>
-                  <option value={1}>1 Star (Poor)</option>
+                <label>Rating Out of 5 Stars</label>
+                <select value={rating} onChange={(e) => setRating(Number(e.target.value))}>
+                  <option value={5}>⭐⭐⭐⭐⭐ (Excellent)</option>
+                  <option value={4}>⭐⭐⭐⭐ (Very Good)</option>
+                  <option value={3}>⭐⭐⭐ (Satisfactory)</option>
+                  <option value={2}>⭐⭐ (Fair)</option>
+                  <option value={1}>⭐ (Poor)</option>
                 </select>
               </div>
-
               <div className="grp">
-                <label>Commentary Feedback</label>
+                <label>Write Comment</label>
                 <textarea 
-                  value={comment}
+                  rows={4} 
+                  value={comment} 
                   onChange={(e) => setComment(e.target.value)}
-                  placeholder="Share your stay particulars and rating details..."
-                  rows={4}
+                  placeholder="Tell us about your experience..."
                   required
-                ></textarea>
+                />
               </div>
-
               <button type="submit" className="confirm-booking-btn">
-                Submit Review
+                Submit Review feedback
               </button>
             </form>
           </div>
         </div>
       )}
-
     </div>
   );
 };

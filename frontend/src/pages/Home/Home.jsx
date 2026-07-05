@@ -1,41 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiSearch, FiMapPin, FiCalendar, FiUsers, FiCompass, FiAward, FiStar } from 'react-icons/fi';
+import { FiMapPin, FiCalendar, FiCompass, FiAward, FiStar, FiClock, FiVideo, FiMap } from 'react-icons/fi';
 import api from '../../services/api';
 import hotelExterior from '../../assets/hotel-exterior.jpg';
+import hotelLiving from '../../assets/hotel-living.jpg';
 import './Home.css';
 
 const Home = () => {
   const navigate = useNavigate();
-  const [hotels, setHotels] = useState([]);
-  const [loading, setLoading] = useState(false);
   
-  // Search Inputs
-  const [citySearch, setCitySearch] = useState('Srinagar');
-  const [keywordSearch, setKeywordSearch] = useState('');
-
   // Logged In User Bookings state
   const token = localStorage.getItem('access_token');
   const [myBookings, setMyBookings] = useState([]);
   const [myBookingsLoading, setMyBookingsLoading] = useState(false);
-  
-  const fetchHotels = async (cityVal = '', searchVal = '') => {
-    setLoading(true);
-    try {
-      let url = '/hotels';
-      const params = [];
-      if (cityVal) params.push(`city=${encodeURIComponent(cityVal)}`);
-      if (searchVal) params.push(`search=${encodeURIComponent(searchVal)}`);
-      if (params.length > 0) url += `?${params.join('&')}`;
-      
-      const res = await api.get(url);
-      setHotels(res.data);
-    } catch (err) {
-      console.error("Error fetching hotels from backend:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchMyBookings = async () => {
     setMyBookingsLoading(true);
@@ -50,17 +27,10 @@ const Home = () => {
   };
 
   useEffect(() => {
-    // Initial fetch for approved hotels
-    fetchHotels('Srinagar');
     if (token) {
       fetchMyBookings();
     }
   }, [token]);
-
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    fetchHotels(citySearch, keywordSearch);
-  };
 
   // Filter for confirmed stays in future
   const upcomingStays = myBookings.filter(b => {
@@ -73,45 +43,20 @@ const Home = () => {
 
   return (
     <div className="home-page animate-fade-in">
-      {/* Hero Section with Search Card */}
+      {/* Hero Section */}
       <section className="hero-section" style={{ backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.5)), url(${hotelExterior})` }}>
         <div className="hero-content">
-          <span className="hero-welcome-badge">Panun Ghar Resort</span>
-          <h1>Find Your Perfect Kashmiri Stay</h1>
-          <p>Book premium hotels and heritage resorts in Kashmir with Razorpay & Gmail verification.</p>
-          
-          {/* Goibibo Style Horizontal Search Bar Panel */}
-          <form onSubmit={handleSearchSubmit} className="search-bar-panel card glass-panel">
-            <div className="search-col">
-              <label><FiMapPin size={12} /> City Destination</label>
-              <input 
-                type="text" 
-                value={citySearch}
-                onChange={(e) => setCitySearch(e.target.value)}
-                placeholder="Enter city (e.g. Srinagar)"
-              />
-            </div>
-            
-            <div className="search-col">
-              <label><FiSearch size={12} /> Search Hotels</label>
-              <input 
-                type="text" 
-                value={keywordSearch}
-                onChange={(e) => setKeywordSearch(e.target.value)}
-                placeholder="Hotel name or keyword..."
-              />
-            </div>
-
-            <div className="search-col date-col">
-              <label><FiCalendar size={12} /> Check-In / Out</label>
-              <input type="text" defaultValue="Anytime" readOnly />
-            </div>
-
-            <button type="submit" className="search-submit-btn">
-              <FiSearch size={16} />
-              <span>Search</span>
+          <span className="hero-welcome-badge">Dal Lake, Srinagar</span>
+          <h1>Welcome to Panun Ghar Resort</h1>
+          <p>A premium heritage sanctuary designed for comfort, luxury, and cultural connection in Kashmir.</p>
+          <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
+            <button className="search-submit-btn" onClick={() => navigate('/book')}>
+              Book Your Stay Now
             </button>
-          </form>
+            <button className="search-submit-btn" style={{ backgroundColor: 'transparent', border: '1px solid #ffffff' }} onClick={() => navigate('/about')}>
+              Explore Details
+            </button>
+          </div>
         </div>
       </section>
 
@@ -158,59 +103,69 @@ const Home = () => {
         </section>
       )}
 
-      {/* Main Listings Grid */}
+      {/* Single Hotel Detailed Showcase Section */}
       <section className="hotels-listings-section">
         <div className="intro-header">
-          <h2>Available Approved Accommodations</h2>
-          <p>Explore verified hotel stays. Sign in to place reservations instantly.</p>
+          <h2>About Panun Ghar Resort</h2>
+          <p>Nestled near Dal Lake amidst beautiful pine-forested slopes, offering traditional Kashmiri hospitality.</p>
         </div>
 
-        {loading ? (
-          <div className="loading-spinner-box">Searching hotels...</div>
-        ) : hotels.length > 0 ? (
-          <div className="hotels-search-results-grid">
-            {hotels.map((hotel) => (
-              <div key={hotel.id} className="hotel-listing-card card glass-panel">
-                <div className="hotel-card-img-wrapper">
-                  <img src={hotelExterior} alt={hotel.name} />
-                  <div className="hotel-rating-tag">
-                    <FiStar size={12} fill="currentColor" />
-                    <span>4.9</span>
-                  </div>
+        <div className="hotels-search-results-grid">
+          <div className="hotel-listing-card card glass-panel" style={{ gridTemplateColumns: '1fr 1fr', padding: '2rem', gap: '2rem' }}>
+            <div className="hotel-card-img-wrapper" style={{ height: '380px' }}>
+              <img src={hotelLiving} alt="Panun Ghar Living Room" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <div className="hotel-rating-tag">
+                <FiStar size={12} fill="currentColor" />
+                <span>4.9</span>
+              </div>
+            </div>
+            
+            <div className="hotel-card-details" style={{ height: 'auto', gap: '1.25rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>Panun Ghar Luxury Resort</h3>
+                <span className="location-badge">
+                  <FiMapPin size={12} />
+                  <span>Srinagar, Kashmir</span>
+                </span>
+              </div>
+              
+              <p className="hotel-card-desc" style={{ fontSize: '0.95rem', margin: 0 }}>
+                Experience premium luxury designed for comfort, luxury, and cultural connection in Kashmir. 
+                Our resort features classic wooden architecture, premium suites, a heated indoor swimming pool, 
+                and an exclusive private cinema theater lounge.
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
+                  <FiVideo size={16} className="text-primary" />
+                  <span>🎬 Private Cinema Lounge</span>
                 </div>
-                
-                <div className="hotel-card-details">
-                  <div className="hotel-card-header">
-                    <h3>{hotel.name}</h3>
-                    <span className="location-badge">
-                      <FiMapPin size={12} />
-                      <span>{hotel.city}</span>
-                    </span>
-                  </div>
-                  
-                  <p className="hotel-card-desc">{hotel.description}</p>
-                  
-                  <div className="hotel-card-footer">
-                    <div className="hotel-features-icons">
-                      <span title="Cinema Theatre">🎬 Private Cinema</span>
-                      <span title="Heated Pool">🏊 Heated Pool</span>
-                    </div>
-                    <button 
-                      className="view-rooms-btn"
-                      onClick={() => navigate(`/hotel/${hotel.id}`)}
-                    >
-                      View Rooms & Rates
-                    </button>
-                  </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
+                  <FiClock size={16} className="text-primary" />
+                  <span>🏊 Heated Swimming Pool</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
+                  <FiMap size={16} className="text-primary" />
+                  <span>📍 Near Dal Lake, Srinagar</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
+                  <FiClock size={16} className="text-primary" />
+                  <span>🛎️ 24/7 Butler Desk</span>
                 </div>
               </div>
-            ))}
+              
+              <div className="hotel-card-footer" style={{ border: 'none', padding: 0, marginTop: '0.5rem' }}>
+                <button 
+                  className="view-rooms-btn"
+                  style={{ width: '100%', padding: '1rem', fontSize: '1rem' }}
+                  onClick={() => navigate('/book')}
+                >
+                  View Room Categories & Rates
+                </button>
+              </div>
+            </div>
           </div>
-        ) : (
-          <div className="empty-hotels-box card">
-            <p>No verified hotels found in <strong>{citySearch || 'your search'}</strong>. Try searching "Srinagar".</p>
-          </div>
-        )}
+        </div>
       </section>
 
       {/* Benefits / Services section */}

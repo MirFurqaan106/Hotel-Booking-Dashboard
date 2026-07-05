@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.database.session import get_db
 from app.models.models import User, OTPVerification, PasswordReset, ActivityLog
-from app.schemas.schemas import UserCreate, UserResponse, OTPVerify, Token, PasswordResetRequest, PasswordResetConfirm
+from app.schemas.schemas import UserCreate, UserResponse, OTPVerify, Token, PasswordResetRequest, PasswordResetConfirm, PasswordChangeRequest
 from app.utils.security import verify_password, get_password_hash
 from app.utils.jwt import create_access_token, create_refresh_token, decode_token
 from app.config.config import settings
@@ -277,3 +277,46 @@ def reset_password(confirm: PasswordResetConfirm, db: Session = Depends(get_db))
     db.commit()
     
     return {"message": "Password reset successfully. You can now login."}
+
+
+@router.post("/change-password", status_code=status.HTTP_200_OK)
+def change_password(
+    req: PasswordChangeRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    import bcrypt
+    from app.api.deps import get_current_user
+    
+    # 1. Verify current password
+    pwd_bytes = req.current_password.encode('utf-8')
+    hashed_bytes = current_user.hashed_password.encode('utf-8')
+    if not bcrypt.checkpw(pwd_bytes, hashed_bytes):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect current password"
+        )
+        
+    # 2. Validate new password strength
+    import re
+    password_regex = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+    if not re.match(password_regex, req.new_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be at least 8 characters and contain at least one uppercase letter, one lowercase letter, one number, and one special character."
+        )
+        
+    # 3. Update password
+    current_user.hashed_password = get_password_hash(req.new_password)
+    
+    # 4. Log Action
+    log = ActivityLog(
+        user_id=current_user.id,
+        action="Password Changed",
+        details="User successfully changed account password."
+    )
+    db.add(log)
+    db.commit()
+    
+    return {"message": "Password changed successfully."}
+

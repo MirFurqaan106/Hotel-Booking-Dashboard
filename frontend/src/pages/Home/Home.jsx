@@ -168,34 +168,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Benefits / Services section */}
-      <section className="home-benefits">
-        <div className="features-grid-home">
-          <div className="feature-home-card card">
-            <div className="icon-box-home bg-primary-light text-primary">
-              <FiAward size={24} />
-            </div>
-            <h3>Relational Security</h3>
-            <p>Full secure role-based access controls (RBAC) with password hashing and JWT sessions.</p>
-          </div>
-
-          <div className="feature-home-card card">
-            <div className="icon-box-home bg-success-light text-success">
-              <FiCompass size={24} />
-            </div>
-            <h3>Fast Verification</h3>
-            <p>Instant verify registration and security resets using One-Time Passwords (OTP).</p>
-          </div>
-
-          <div className="feature-home-card card">
-            <div className="icon-box-home bg-warning-light text-warning">
-              <FiStar size={24} />
-            </div>
-            <h3>Razorpay Integrated</h3>
-            <p>Confirm booking receipts via full pay, token advance, or pay at desk options.</p>
-          </div>
-        </div>
-      </section>
     </div>
   );
 };

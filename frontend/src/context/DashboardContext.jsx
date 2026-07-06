@@ -45,7 +45,8 @@ export const DashboardProvider = ({ children }) => {
           BookingStatus: b.booking_status,
           PaymentStatus: b.paid_amount >= b.total_amount ? "Paid" : "Unpaid",
           Revenue: b.total_amount,
-          Rating: b.booking_status === "Checked Out" ? 5 : null
+          Rating: b.booking_status === "Checked Out" ? 5 : null,
+          _raw: b  // keep original backend record for invoice + delete
         }));
         setBookings(mapped);
       } catch (err) {

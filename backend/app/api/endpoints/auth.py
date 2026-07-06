@@ -327,16 +327,25 @@ def update_profile(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Update the authenticated user's full name and phone number."""
+    """Update the authenticated user's full name, phone, and email."""
     if req.full_name is not None:
         current_user.full_name = req.full_name.strip()
     if req.phone is not None:
         current_user.phone = req.phone.strip()
+    if req.email is not None and req.email != current_user.email:
+        # Check email is not already taken
+        existing = db.query(User).filter(User.email == req.email).first()
+        if existing:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This email address is already registered to another account."
+            )
+        current_user.email = req.email
 
     log = ActivityLog(
         user_id=current_user.id,
         action="Profile Updated",
-        details=f"User updated profile name/phone."
+        details="User updated profile info."
     )
     db.add(log)
     db.commit()

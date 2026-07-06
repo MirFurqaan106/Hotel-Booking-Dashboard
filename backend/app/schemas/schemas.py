@@ -263,3 +263,4 @@ class PasswordChangeRequest(BaseModel):
 class ProfileUpdateRequest(BaseModel):
     full_name: Optional[str] = None
     phone: Optional[str] = None
+    email: Optional[EmailStr] = None

@@ -54,7 +54,7 @@ class Hotel(Base):
     city = Column(String, index=True, nullable=False)
     email = Column(String, nullable=True)
     phone = Column(String, nullable=True)
-    manager_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    manager_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     is_approved = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -83,7 +83,7 @@ class Booking(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     booking_code = Column(String, unique=True, index=True, nullable=False) # e.g. HB-1002
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     room_id = Column(Integer, ForeignKey("rooms.id"), nullable=False)
     check_in = Column(Date, nullable=False)
     check_out = Column(Date, nullable=False)

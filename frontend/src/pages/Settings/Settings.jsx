@@ -24,7 +24,7 @@ const Settings = () => {
 
   // ─── Profile State (loaded from localStorage, saved to DB) ───────────────
   const [name, setName] = useState(localStorage.getItem('user_name') || '');
-  const [email] = useState(localStorage.getItem('user_email') || '');
+  const [email, setEmail] = useState(localStorage.getItem('user_email') || '');
   const [phone, setPhone] = useState(localStorage.getItem('user_phone') || '');
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileMsg, setProfileMsg] = useState(null); // { type: 'success'|'error', text }
@@ -78,10 +78,12 @@ const Settings = () => {
     try {
       const res = await api.put('/auth/update-profile', {
         full_name: name.trim(),
-        phone: phone.trim()
+        phone: phone.trim(),
+        email: email.trim()
       });
       // Update localStorage so Navbar reflects immediately
       localStorage.setItem('user_name', res.data.full_name);
+      localStorage.setItem('user_email', res.data.email);
       if (phone) localStorage.setItem('user_phone', res.data.phone || '');
       // Dispatch storage event so Navbar re-renders
       window.dispatchEvent(new Event('storage'));
@@ -205,10 +207,16 @@ const Settings = () => {
                 </div>
 
                 <div className="form-group">
-                  <label>Email Address <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>(cannot be changed)</span></label>
-                  <div className="input-wrapper disabled">
+                  <label>Email Address</label>
+                  <div className="input-wrapper">
                     <FiMail className="input-icon" size={14} />
-                    <input type="email" value={email} disabled />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="your@email.com"
+                      required
+                    />
                   </div>
                 </div>
 

@@ -113,20 +113,23 @@ def create_booking(
     
     # Dispatch Email notification if Confirmed
     if initial_status == "Confirmed":
-        subject = f"[Panun Ghar] Booking Confirmation: {new_booking.booking_code}"
-        body_text = f"Your reservation {new_booking.booking_code} is confirmed! Check-in: {new_booking.check_in}."
-        body_html = f"""
-        <html>
-            <body>
-                <h2>Booking Confirmed!</h2>
-                <p>Hello {current_user.full_name}, your room reservation has been successfully confirmed.</p>
-                <p><strong>Booking Ref:</strong> {new_booking.booking_code}<br/>
-                   <strong>Check-In:</strong> {new_booking.check_in}<br/>
-                   <strong>Check-Out:</strong> {new_booking.check_out}</p>
-            </body>
-        </html>
-        """
-        EmailService.send_email(current_user.email, subject, body_html, body_text)
+        try:
+            subject = f"[Panun Ghar] Booking Confirmation: {new_booking.booking_code}"
+            body_text = f"Your reservation {new_booking.booking_code} is confirmed! Check-in: {new_booking.check_in}."
+            body_html = f"""
+            <html>
+                <body>
+                    <h2>Booking Confirmed!</h2>
+                    <p>Hello {current_user.full_name}, your room reservation has been successfully confirmed.</p>
+                    <p><strong>Booking Ref:</strong> {new_booking.booking_code}<br/>
+                       <strong>Check-In:</strong> {new_booking.check_in}<br/>
+                       <strong>Check-Out:</strong> {new_booking.check_out}</p>
+                </body>
+            </html>
+            """
+            EmailService.send_email(current_user.email, subject, body_html, body_text)
+        except Exception as e:
+            print(f"Error dispatching booking confirmation email: {e}")
         
     return new_booking
 

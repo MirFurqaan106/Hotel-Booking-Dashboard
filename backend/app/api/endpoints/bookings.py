@@ -69,17 +69,11 @@ def create_booking(
     nights = max(delta.days, 1)
     total_amount = nights * room.price_per_night
     
-    # Define paid amount based on option
+    # Define paid amount based on option (set initial paid_amount to 0, payments endpoints will increment this on success)
     paid_amount = 0
     initial_status = "Pending"
     if booking_in.payment_option == "Later":
         initial_status = "Confirmed"
-    elif booking_in.payment_option == "Token":
-        paid_amount = int(total_amount * 0.20) # Dynamic 20% token rate
-        initial_status = "Pending" # Becomes Confirmed on payment success
-    elif booking_in.payment_option == "Full":
-        paid_amount = total_amount
-        initial_status = "Pending" # Becomes Confirmed on payment success
         
     # 4. Generate unique Booking ID code
     count = db.query(Booking).count()
@@ -94,7 +88,7 @@ def create_booking(
         check_out=booking_in.check_out,
         booking_status=initial_status,
         total_amount=total_amount,
-        paid_amount=paid_amount,
+        paid_amount=0,
         payment_option=booking_in.payment_option
     )
     db.add(new_booking)

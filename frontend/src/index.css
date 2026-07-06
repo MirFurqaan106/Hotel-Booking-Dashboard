@@ -139,6 +139,21 @@ p {
   line-height: 1.6;
 }
 
+/* Global Date Picker & Input Color Schemes */
+input[type="date"] {
+  color-scheme: light dark;
+}
+[data-theme='dark'] input[type="date"] {
+  color-scheme: dark;
+}
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(var(--calendar-invert-val, 0));
+  cursor: pointer;
+}
+[data-theme='dark'] {
+  --calendar-invert-val: 1;
+}
+
 /* Cards & Layout utilities */
 .card {
   background: var(--bg-card);

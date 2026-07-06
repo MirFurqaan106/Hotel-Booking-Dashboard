@@ -13,6 +13,7 @@ import {
   FiX,
   FiLogOut
 } from 'react-icons/fi';
+import logoImg from '../../assets/logo.jpg';
 import './Sidebar.css';
 
 const Sidebar = () => {
@@ -48,10 +49,10 @@ const Sidebar = () => {
       )}
 
       <aside className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''} ${mobileSidebarOpen ? 'mobile-open' : ''}`}>
-        <div className="sidebar-brand">
-          <div className="brand-logo">
-            <span className="logo-icon">P</span>
-            {!sidebarCollapsed && <span className="logo-text">Panun<span className="logo-sub"> Ghar</span></span>}
+        <div className="sidebar-brand" style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className="brand-logo" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <img src={logoImg} alt="Panun Ghar Logo" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
+            {!sidebarCollapsed && <span className="logo-text" style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)' }}>Panun<span style={{ color: 'var(--primary)' }}> Ghar</span></span>}
           </div>
           
           {/* Mobile Close Button */}

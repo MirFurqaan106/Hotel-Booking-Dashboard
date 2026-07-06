@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FiMail, FiLock, FiAlertCircle, FiLogIn } from 'react-icons/fi';
 import api from '../../services/api';
+import logoImg from '../../assets/logo.jpg';
 import './Auth.css';
 
 const Login = () => {
@@ -56,7 +57,7 @@ const Login = () => {
     <div className="auth-page-container page-container animate-fade-in">
       <div className="auth-card card glass-panel">
         <div className="auth-header">
-          <span className="auth-logo-icon">P</span>
+          <img src={logoImg} alt="Panun Ghar Logo" style={{ width: '54px', height: '54px', borderRadius: '50%', objectFit: 'cover', margin: '0 auto 0.75rem auto', display: 'block' }} />
           <h2>Sign In to Panun Ghar</h2>
           <p>Access your guest reservations or manager dashboard panel.</p>
         </div>

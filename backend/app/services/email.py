@@ -52,13 +52,19 @@ class EmailService:
         body_text = f"Your email verification code is: {code}. This OTP is valid for 10 minutes."
         body_html = f"""
         <html>
-            <body style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-                <h2 style="color: #4f46e5;">Welcome to Panun Ghar Resort</h2>
-                <p>Thank you for registering. Please verify your email using the following One-Time Password (OTP):</p>
-                <div style="font-size: 24px; font-weight: bold; background: #f3f4f6; padding: 15px; text-align: center; border-radius: 8px; margin: 20px 0; color: #111827; letter-spacing: 0.1em;">
-                    {code}
+            <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; color: #333; background-color: #f9fafb;">
+                <div style="max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;">
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #06b6d4); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; margin: 0 auto 10px auto; font-family: sans-serif; line-height: 60px; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">P</div>
+                        <h2 style="margin: 0; color: #1e3a8a; font-size: 22px; font-weight: 800;">Panun Ghar Luxury Resort</h2>
+                        <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #6b7280; font-weight: 600;">Srinagar, Kashmir</span>
+                    </div>
+                    <p style="font-size: 15px; line-height: 1.6; color: #4b5563;">Thank you for registering. Please verify your email using the following secure One-Time Password (OTP):</p>
+                    <div style="font-size: 28px; font-weight: 800; background: #f3f4f6; padding: 15px; text-align: center; border-radius: 8px; margin: 25px 0; color: #1e3a8a; letter-spacing: 0.15em;">
+                        {code}
+                    </div>
+                    <p style="font-size: 12px; color: #9ca3af; text-align: center; margin-top: 25px;">This OTP is valid for 10 minutes. If you did not request this, you can ignore this email.</p>
                 </div>
-                <p style="font-size: 12px; color: #6b7280;">This verification code is valid for 10 minutes. If you did not request this, you can ignore this email.</p>
             </body>
         </html>
         """
@@ -70,11 +76,18 @@ class EmailService:
         body_text = f"Hello {name}, welcome to Panun Ghar Resort. Your account has been verified successfully."
         body_html = f"""
         <html>
-            <body style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-                <h2 style="color: #4f46e5;">Verified Successfully!</h2>
-                <p>Hello <strong>{name}</strong>,</p>
-                <p>Welcome to Panun Ghar Resort! Your account is now active. You can browse, choose, and book premium rooms directly.</p>
-                <p>Best regards,<br/>The Panun Ghar Team</p>
+            <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; color: #333; background-color: #f9fafb;">
+                <div style="max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;">
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #06b6d4); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; margin: 0 auto 10px auto; font-family: sans-serif; line-height: 60px; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">P</div>
+                        <h2 style="margin: 0; color: #1e3a8a; font-size: 22px; font-weight: 800;">Panun Ghar Luxury Resort</h2>
+                        <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #6b7280; font-weight: 600;">Srinagar, Kashmir</span>
+                    </div>
+                    <h3 style="color: #10b981; margin-top: 0;">Verified Successfully!</h3>
+                    <p style="font-size: 15px; line-height: 1.6; color: #4b5563;">Hello <strong>{name}</strong>,</p>
+                    <p style="font-size: 15px; line-height: 1.6; color: #4b5563;">Welcome to Panun Ghar Resort! Your account is now active. You can browse, choose, and book premium rooms directly.</p>
+                    <p style="font-size: 14px; color: #6b7280; margin-top: 25px;">Best regards,<br/>The Panun Ghar Team</p>
+                </div>
             </body>
         </html>
         """
@@ -86,13 +99,19 @@ class EmailService:
         body_text = f"Please use reset token: {token} to reset your password."
         body_html = f"""
         <html>
-            <body style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-                <h2 style="color: #4f46e5;">Password Reset Request</h2>
-                <p>We received a request to reset your password. Use the following code/token to complete the reset process:</p>
-                <div style="font-size: 18px; font-weight: bold; background: #f3f4f6; padding: 12px; text-align: center; border-radius: 8px; margin: 15px 0;">
-                    {token}
+            <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 30px; color: #333; background-color: #f9fafb;">
+                <div style="max-width: 600px; margin: 0 auto; background: #ffffff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;">
+                    <div style="text-align: center; margin-bottom: 25px;">
+                        <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #06b6d4); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; margin: 0 auto 10px auto; font-family: sans-serif; line-height: 60px; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">P</div>
+                        <h2 style="margin: 0; color: #1e3a8a; font-size: 22px; font-weight: 800;">Panun Ghar Luxury Resort</h2>
+                        <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #6b7280; font-weight: 600;">Srinagar, Kashmir</span>
+                    </div>
+                    <p style="font-size: 15px; line-height: 1.6; color: #4b5563;">We received a request to reset your password. Use the following code/token to complete the reset process:</p>
+                    <div style="font-size: 22px; font-weight: 800; background: #f3f4f6; padding: 12px; text-align: center; border-radius: 8px; margin: 20px 0; color: #1e3a8a; letter-spacing: 0.1em;">
+                        {token}
+                    </div>
+                    <p style="font-size: 12px; color: #9ca3af; text-align: center; margin-top: 25px;">If you did not request a password reset, please secure your account immediately.</p>
                 </div>
-                <p style="font-size: 12px; color: #6b7280;">If you did not request a password reset, please secure your account.</p>
             </body>
         </html>
         """

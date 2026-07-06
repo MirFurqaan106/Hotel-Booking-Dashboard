@@ -141,6 +141,7 @@ const BookingSection = () => {
         currency: orderData.currency,
         name: "Panun Ghar Resort",
         description: `Stay Advance: Room Reservation ${pendingBooking.booking_code}`,
+        image: "/src/assets/logo.jpg",
         order_id: orderData.order_id,
         handler: async function (response) {
           setIsProcessingPay(true);

@@ -128,9 +128,6 @@ const Revenue = () => {
     <div className="revenue-page page-container animate-fade-in">
       <Header title="Revenue Analytics" subtitle="Track financial growth, evaluate room class profits, and inspect revenue margins" />
 
-      {/* Filters at Top */}
-      <Filters />
-
       {/* Financial KPIs */}
       <div className="revenue-kpis-grid">
         <div className="rev-kpi-card card">

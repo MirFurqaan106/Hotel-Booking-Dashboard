@@ -132,14 +132,20 @@ const UserDashboard = () => {
           </style>
         </head>
         <body>
-          <h2>PANUN GHAR RESORT INVOICE</h2>
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 25px; border-bottom: 2px solid #1e3a8a; padding-bottom: 15px;">
+            <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #06b6d4); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; font-family: sans-serif; line-height: 46px; text-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center;">P</div>
+            <div>
+              <h2 style="margin: 0; color: #1e3a8a; font-size: 20px; font-weight: 800; border: none; padding: 0;">PANUN GHAR LUXURY RESORT</h2>
+              <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #6b7280; font-weight: 600; display: block; margin-top: 2px;">Srinagar, Kashmir</span>
+            </div>
+          </div>
           <div class="details">
             <p><strong>Booking Code:</strong> ${booking.booking_code}</p>
             <p><strong>Check-In:</strong> ${booking.check_in}</p>
             <p><strong>Check-Out:</strong> ${booking.check_out}</p>
             <p><strong>Status:</strong> ${booking.booking_status}</p>
           </div>
-          <hr />
+          <hr style="border: none; border-top: 1px dashed #ccc; margin: 20px 0;" />
           <div class="item">
             <span>Room Reservation Fee</span>
             <span>₹${booking.total_amount}</span>

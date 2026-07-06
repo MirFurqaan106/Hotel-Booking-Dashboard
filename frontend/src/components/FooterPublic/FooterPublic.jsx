@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { FiPhone, FiMail, FiMapPin, FiLock } from 'react-icons/fi';
+import logoImg from '../../assets/logo.jpg';
 import './FooterPublic.css';
 
 const FooterPublic = () => {
@@ -14,8 +15,8 @@ const FooterPublic = () => {
       <div className="footer-public-container">
         {/* About Panun Ghar */}
         <div className="footer-col about-col">
-          <Link to="/" className="footer-logo">
-            <span className="logo-icon-p">P</span>
+          <Link to="/" className="footer-logo" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <img src={logoImg} alt="Panun Ghar Logo" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
             <span>Panun Ghar</span>
           </Link>
           <p className="about-text">

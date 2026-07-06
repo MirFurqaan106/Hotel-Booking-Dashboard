@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { FiMenu, FiX, FiLock, FiSun, FiMoon, FiUser, FiLogOut } from 'react-icons/fi';
 import { useDashboard } from '../../context/DashboardContext';
+import logoImg from '../../assets/logo.jpg';
 import './NavbarPublic.css';
 
 const NavbarPublic = () => {
@@ -29,8 +30,8 @@ const NavbarPublic = () => {
   return (
     <header className="navbar-public glass-panel">
       <div className="nav-container">
-        <Link to="/" className="nav-brand">
-          <span className="brand-logo-icon">P</span>
+        <Link to="/" className="nav-brand" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <img src={logoImg} alt="Panun Ghar Logo" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
           <span className="brand-title-text">Panun<span className="brand-sub-text"> Ghar</span></span>
         </Link>
 

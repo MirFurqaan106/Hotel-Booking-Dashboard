@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { FiUser, FiMail, FiLock, FiPhone, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 import api from '../../services/api';
+import logoImg from '../../assets/logo.jpg';
 import './Auth.css';
 
 const Register = () => {
@@ -75,7 +76,7 @@ const Register = () => {
     <div className="auth-page-container page-container animate-fade-in">
       <div className="auth-card card glass-panel">
         <div className="auth-header">
-          <span className="auth-logo-icon">P</span>
+          <img src={logoImg} alt="Panun Ghar Logo" style={{ width: '54px', height: '54px', borderRadius: '50%', objectFit: 'cover', margin: '0 auto 0.75rem auto', display: 'block' }} />
           <h2>Register Account</h2>
           <p>Create an account to book hotel stays or request management access.</p>
         </div>

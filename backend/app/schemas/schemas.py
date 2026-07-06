@@ -260,3 +260,6 @@ class PasswordChangeRequest(BaseModel):
     new_password: str
 
 
+class ProfileUpdateRequest(BaseModel):
+    full_name: Optional[str] = None
+    phone: Optional[str] = None

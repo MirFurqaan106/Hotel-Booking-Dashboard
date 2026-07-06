@@ -10,21 +10,41 @@ import {
   FiGlobe, 
   FiMoon, 
   FiSun, 
-  FiCheckCircle
+  FiCheckCircle,
+  FiAlertCircle,
+  FiPhone,
+  FiSave,
+  FiKey
 } from 'react-icons/fi';
 import './Settings.css';
 
 const Settings = () => {
-  const { 
-    theme, 
-    toggleTheme, 
-    language, 
-    setLanguage 
-  } = useDashboard();
+  const { theme, toggleTheme, language, setLanguage } = useDashboard();
+  const roleVal = localStorage.getItem('user_role') || '';
 
-  const roleVal = localStorage.getItem('user_role');
-  
-  // Administrative User State
+  // ─── Profile State (loaded from localStorage, saved to DB) ───────────────
+  const [name, setName] = useState(localStorage.getItem('user_name') || '');
+  const [email] = useState(localStorage.getItem('user_email') || '');
+  const [phone, setPhone] = useState(localStorage.getItem('user_phone') || '');
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileMsg, setProfileMsg] = useState(null); // { type: 'success'|'error', text }
+
+  // ─── Change Password State ────────────────────────────────────────────────
+  const [currentPwd, setCurrentPwd] = useState('');
+  const [newPwd, setNewPwd] = useState('');
+  const [confirmPwd, setConfirmPwd] = useState('');
+  const [pwdSaving, setPwdSaving] = useState(false);
+  const [pwdMsg, setPwdMsg] = useState(null);
+
+  // ─── Notification Toggles (local only) ────────────────────────────────────
+  const [notifications, setNotifications] = useState({
+    emailAlerts: true,
+    newBookings: true,
+    cancellations: true,
+    smsAlerts: false,
+  });
+
+  // ─── Admin user management ─────────────────────────────────────────────────
   const [users, setUsers] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newMgrName, setNewMgrName] = useState('');
@@ -38,37 +58,77 @@ const Settings = () => {
       const res = await api.get('/admin-portal/users');
       setUsers(res.data);
     } catch (err) {
-      console.error("Failed to load user records:", err);
+      console.error('Failed to load user records:', err);
     }
   };
 
   useEffect(() => {
-    if (roleVal === 'Admin') {
-      fetchUsers();
-    }
+    if (roleVal === 'Admin') fetchUsers();
   }, [roleVal]);
 
-  const handleDeleteUser = async (userId) => {
-    if (!window.confirm("Are you sure you want to delete this account?")) return;
+  // ─── Save Profile to DB ────────────────────────────────────────────────────
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      setProfileMsg({ type: 'error', text: 'Full name cannot be empty.' });
+      return;
+    }
+    setProfileSaving(true);
+    setProfileMsg(null);
     try {
-      await api.delete(`/admin-portal/users/${userId}`);
-      fetchUsers();
+      const res = await api.put('/auth/update-profile', {
+        full_name: name.trim(),
+        phone: phone.trim()
+      });
+      // Update localStorage so Navbar reflects immediately
+      localStorage.setItem('user_name', res.data.full_name);
+      if (phone) localStorage.setItem('user_phone', res.data.phone || '');
+      // Dispatch storage event so Navbar re-renders
+      window.dispatchEvent(new Event('storage'));
+      setProfileMsg({ type: 'success', text: 'Profile saved successfully!' });
     } catch (err) {
-      alert(err.response?.data?.detail || "Delete operation failed.");
+      setProfileMsg({ type: 'error', text: err.response?.data?.detail || 'Failed to save profile.' });
+    } finally {
+      setProfileSaving(false);
+      setTimeout(() => setProfileMsg(null), 4000);
     }
   };
 
+  // ─── Change Password ───────────────────────────────────────────────────────
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    if (newPwd !== confirmPwd) {
+      setPwdMsg({ type: 'error', text: 'New passwords do not match.' });
+      return;
+    }
+    setPwdSaving(true);
+    setPwdMsg(null);
+    try {
+      await api.post('/auth/change-password', {
+        current_password: currentPwd,
+        new_password: newPwd
+      });
+      setPwdMsg({ type: 'success', text: 'Password changed successfully!' });
+      setCurrentPwd('');
+      setNewPwd('');
+      setConfirmPwd('');
+    } catch (err) {
+      setPwdMsg({ type: 'error', text: err.response?.data?.detail || 'Failed to change password. Check your current password.' });
+    } finally {
+      setPwdSaving(false);
+      setTimeout(() => setPwdMsg(null), 4000);
+    }
+  };
+
+  // ─── Admin: Add Manager ────────────────────────────────────────────────────
   const handleAddManagerSubmit = async (e) => {
     e.preventDefault();
     setModalError('');
-    
-    // Front-end password check
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(newMgrPass)) {
-      setModalError("Password must be 8+ chars and contain uppercase, lowercase, numeric, and special characters.");
+      setModalError('Password must be 8+ chars with uppercase, lowercase, number, and special character.');
       return;
     }
-
     try {
       await api.post('/admin-portal/managers', {
         email: newMgrEmail,
@@ -78,143 +138,180 @@ const Settings = () => {
         role_name: 'Manager'
       });
       setShowAddModal(false);
-      setNewMgrName('');
-      setNewMgrEmail('');
-      setNewMgrPhone('');
-      setNewMgrPass('');
+      setNewMgrName(''); setNewMgrEmail(''); setNewMgrPhone(''); setNewMgrPass('');
       fetchUsers();
     } catch (err) {
-      setModalError(err.response?.data?.detail || "Failed to create manager account.");
+      setModalError(err.response?.data?.detail || 'Failed to create manager account.');
     }
   };
 
-  // Local State for Profile
-  const [profile, setProfile] = useState({
-    name: 'Mir Furqaan',
-    email: 'mirfurkaan106@gmail.com',
-    role: 'Admin Manager',
-    phone: '+91 94190 55555'
-  });
-
-  // Local State for Notification toggles
-  const [notifications, setNotifications] = useState({
-    emailAlerts: true,
-    smsAlerts: false,
-    newBookings: true,
-    cancellations: true,
-    systemUpdates: false
-  });
-
-  // Local Save Feedback state
-  const [isSaved, setIsSaved] = useState(false);
-
-  const handleProfileChange = (e) => {
-    const { name, value } = e.target;
-    setProfile(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleNotificationToggle = (key) => {
-    setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
-  };
-
-  const handleSaveChanges = (e) => {
-    e.preventDefault();
-    setIsSaved(true);
-    setTimeout(() => {
-      setIsSaved(false);
-    }, 3000);
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('Are you sure you want to delete this account?')) return;
+    try {
+      await api.delete(`/admin-portal/users/${userId}`);
+      fetchUsers();
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Delete operation failed.');
+    }
   };
 
   return (
     <div className="settings-page page-container animate-fade-in">
-      <Header title="System Settings" subtitle="Configure manager profiles, notifications, language choices, and user themes" />
+      <Header title="System Settings" subtitle="Update your profile, change your password, and configure app preferences" />
 
-      {isSaved && (
-        <div className="toast-success animate-fade-in">
-          <FiCheckCircle size={16} />
-          <span>Settings saved successfully!</span>
+      <div className="settings-layout">
+
+        {/* ─── LEFT COLUMN ─────────────────────────────────────────── */}
+        <div className="settings-left-col">
+
+          {/* Profile Settings */}
+          <form onSubmit={handleSaveProfile}>
+            <div className="settings-panel card">
+              <div className="panel-header">
+                <FiUser size={18} className="text-primary" />
+                <h3>Profile Settings</h3>
+              </div>
+
+              <div className="profile-edit-avatar-section">
+                <div className="profile-large-avatar-settings">
+                  {name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                </div>
+                <div className="avatar-meta">
+                  <h4>{name || 'Your Name'}</h4>
+                  <p>{roleVal || 'Manager'}</p>
+                </div>
+              </div>
+
+              {profileMsg && (
+                <div className={`settings-feedback-msg ${profileMsg.type === 'success' ? 'msg-success' : 'msg-error'}`}>
+                  {profileMsg.type === 'success' ? <FiCheckCircle size={15} /> : <FiAlertCircle size={15} />}
+                  <span>{profileMsg.text}</span>
+                </div>
+              )}
+
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Full Name</label>
+                  <div className="input-wrapper">
+                    <FiUser className="input-icon" size={14} />
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Your full name"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Email Address <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>(cannot be changed)</span></label>
+                  <div className="input-wrapper disabled">
+                    <FiMail className="input-icon" size={14} />
+                    <input type="email" value={email} disabled />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Contact Phone</label>
+                  <div className="input-wrapper">
+                    <FiPhone className="input-icon" size={14} />
+                    <input
+                      type="text"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+91 98765 43210"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Account Role</label>
+                  <div className="input-wrapper disabled">
+                    <FiLock className="input-icon" size={14} />
+                    <input type="text" value={roleVal || 'Manager'} disabled />
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" className="save-settings-btn" disabled={profileSaving} style={{ marginTop: '1rem' }}>
+                <FiSave size={15} />
+                <span>{profileSaving ? 'Saving...' : 'Save Profile Changes'}</span>
+              </button>
+            </div>
+          </form>
+
+          {/* Change Password */}
+          <form onSubmit={handleChangePassword} style={{ marginTop: '1.5rem' }}>
+            <div className="settings-panel card">
+              <div className="panel-header">
+                <FiKey size={18} className="text-warning" />
+                <h3>Change Password</h3>
+              </div>
+
+              {pwdMsg && (
+                <div className={`settings-feedback-msg ${pwdMsg.type === 'success' ? 'msg-success' : 'msg-error'}`}>
+                  {pwdMsg.type === 'success' ? <FiCheckCircle size={15} /> : <FiAlertCircle size={15} />}
+                  <span>{pwdMsg.text}</span>
+                </div>
+              )}
+
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Current Password</label>
+                  <div className="input-wrapper">
+                    <FiLock className="input-icon" size={14} />
+                    <input
+                      type="password"
+                      value={currentPwd}
+                      onChange={(e) => setCurrentPwd(e.target.value)}
+                      placeholder="Enter your current password"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>New Password</label>
+                  <div className="input-wrapper">
+                    <FiLock className="input-icon" size={14} />
+                    <input
+                      type="password"
+                      value={newPwd}
+                      onChange={(e) => setNewPwd(e.target.value)}
+                      placeholder="Min 8 chars, uppercase, number, symbol"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Confirm New Password</label>
+                  <div className="input-wrapper">
+                    <FiLock className="input-icon" size={14} />
+                    <input
+                      type="password"
+                      value={confirmPwd}
+                      onChange={(e) => setConfirmPwd(e.target.value)}
+                      placeholder="Re-enter new password"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <button type="submit" className="save-settings-btn" disabled={pwdSaving} style={{ marginTop: '1rem', background: 'var(--warning)', color: '#000' }}>
+                <FiKey size={15} />
+                <span>{pwdSaving ? 'Updating...' : 'Update Password'}</span>
+              </button>
+            </div>
+          </form>
         </div>
-      )}
 
-      <form onSubmit={handleSaveChanges} className="settings-layout">
-        
-        {/* Left: Profile Card Details */}
-        <div className="settings-panel card">
-          <div className="panel-header">
-            <FiUser size={18} className="text-primary" />
-            <h3>Profile Settings</h3>
-          </div>
-          
-          <div className="profile-edit-avatar-section">
-            <div className="profile-large-avatar-settings">
-              {profile.name.split(' ').map(n => n[0]).join('')}
-            </div>
-            <div className="avatar-meta">
-              <h4>{profile.name}</h4>
-              <p>{profile.role}</p>
-            </div>
-          </div>
-
-          <div className="form-grid">
-            <div className="form-group">
-              <label>Full Name</label>
-              <div className="input-wrapper">
-                <FiUser className="input-icon" size={14} />
-                <input 
-                  type="text" 
-                  name="name"
-                  value={profile.name} 
-                  onChange={handleProfileChange}
-                  required 
-                />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label>Email Address</label>
-              <div className="input-wrapper">
-                <FiMail className="input-icon" size={14} />
-                <input 
-                  type="email" 
-                  name="email"
-                  value={profile.email} 
-                  onChange={handleProfileChange}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label>Contact Phone</label>
-              <div className="input-wrapper">
-                <FiLock className="input-icon" size={14} />
-                <input 
-                  type="text" 
-                  name="phone"
-                  value={profile.phone} 
-                  onChange={handleProfileChange} 
-                />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label>Account Role</label>
-              <div className="input-wrapper disabled">
-                <FiLock className="input-icon" size={14} />
-                <input 
-                  type="text" 
-                  value={profile.role} 
-                  disabled 
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right: Preference panel */}
+        {/* ─── RIGHT COLUMN ────────────────────────────────────────── */}
         <div className="settings-right-col">
-          
-          {/* Theme & Language Configuration */}
+
+          {/* Theme & Language */}
           <div className="settings-panel card">
             <div className="panel-header">
               <FiGlobe size={18} className="text-info" />
@@ -227,18 +324,18 @@ const Settings = () => {
                 <p>Select light or dark mode styling</p>
               </div>
               <div className="theme-toggle-options">
-                <button 
+                <button
                   type="button"
                   className={`theme-btn-option ${theme === 'light' ? 'active' : ''}`}
-                  onClick={() => { if(theme === 'dark') toggleTheme(); }}
+                  onClick={() => { if (theme === 'dark') toggleTheme(); }}
                 >
                   <FiSun size={14} />
                   <span>Light</span>
                 </button>
-                <button 
+                <button
                   type="button"
                   className={`theme-btn-option ${theme === 'dark' ? 'active' : ''}`}
-                  onClick={() => { if(theme === 'light') toggleTheme(); }}
+                  onClick={() => { if (theme === 'light') toggleTheme(); }}
                 >
                   <FiMoon size={14} />
                   <span>Dark</span>
@@ -251,9 +348,9 @@ const Settings = () => {
                 <h4>Language Selector</h4>
                 <p>Choose localized interface text translation</p>
               </div>
-              <select 
+              <select
                 className="lang-select-box"
-                value={language} 
+                value={language}
                 onChange={(e) => setLanguage(e.target.value)}
               >
                 <option value="en">English (US)</option>
@@ -264,97 +361,57 @@ const Settings = () => {
             </div>
           </div>
 
-          {/* Notifications config */}
-          <div className="settings-panel card">
+          {/* Notification Toggles */}
+          <div className="settings-panel card" style={{ marginTop: '1.5rem' }}>
             <div className="panel-header">
               <FiBell size={18} className="text-warning" />
               <h3>Notification Triggers</h3>
             </div>
 
             <div className="notifications-toggle-list">
-              <label className="toggle-container">
-                <input 
-                  type="checkbox" 
-                  checked={notifications.emailAlerts}
-                  onChange={() => handleNotificationToggle('emailAlerts')}
-                />
-                <span className="checkmark"></span>
-                <div className="toggle-lbl">
-                  <span className="t-title">Email Summaries</span>
-                  <span className="t-desc">Receive weekly revenue reports in inbox</span>
-                </div>
-              </label>
-
-              <label className="toggle-container">
-                <input 
-                  type="checkbox" 
-                  checked={notifications.smsAlerts}
-                  onChange={() => handleNotificationToggle('smsAlerts')}
-                />
-                <span className="checkmark"></span>
-                <div className="toggle-lbl">
-                  <span className="t-title">SMS Notifications</span>
-                  <span className="t-desc">Alert room cleaning upon checkout checkout logs</span>
-                </div>
-              </label>
-
-              <label className="toggle-container">
-                <input 
-                  type="checkbox" 
-                  checked={notifications.newBookings}
-                  onChange={() => handleNotificationToggle('newBookings')}
-                />
-                <span className="checkmark"></span>
-                <div className="toggle-lbl">
-                  <span className="t-title">New Bookings Alerts</span>
-                  <span className="t-desc">Real-time alerts for incoming guests</span>
-                </div>
-              </label>
-
-              <label className="toggle-container">
-                <input 
-                  type="checkbox" 
-                  checked={notifications.cancellations}
-                  onChange={() => handleNotificationToggle('cancellations')}
-                />
-                <span className="checkmark"></span>
-                <div className="toggle-lbl">
-                  <span className="t-title">Cancellation Alerts</span>
-                  <span className="t-desc">Notify booking cancellations immediately</span>
-                </div>
-              </label>
+              {[
+                { key: 'emailAlerts', title: 'Email Summaries', desc: 'Receive weekly revenue reports in inbox' },
+                { key: 'newBookings', title: 'New Booking Alerts', desc: 'Real-time alerts for incoming guests' },
+                { key: 'cancellations', title: 'Cancellation Alerts', desc: 'Notify on booking cancellations' },
+                { key: 'smsAlerts', title: 'SMS Notifications', desc: 'Alert room cleaning upon checkout' },
+              ].map(({ key, title, desc }) => (
+                <label key={key} className="toggle-container">
+                  <input
+                    type="checkbox"
+                    checked={notifications[key]}
+                    onChange={() => setNotifications(prev => ({ ...prev, [key]: !prev[key] }))}
+                  />
+                  <span className="checkmark"></span>
+                  <div className="toggle-lbl">
+                    <span className="t-title">{title}</span>
+                    <span className="t-desc">{desc}</span>
+                  </div>
+                </label>
+              ))}
             </div>
           </div>
-
-          {/* Actions */}
-          <div className="settings-actions">
-            <button type="submit" className="save-settings-btn">
-              Save All Changes
-            </button>
-          </div>
         </div>
+      </div>
 
-      </form>
-
-      {/* Admin User Management Controls */}
+      {/* ─── Admin User Management Controls (Admin-only) ──────────────── */}
       {roleVal === 'Admin' && (
         <div className="admin-portal-settings-card card glass-panel" style={{ marginTop: '2rem' }}>
           <div className="admin-portal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
             <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Admin User & Manager Controls</h3>
-            <button 
+            <button
               type="button"
-              className="add-manager-trigger-btn" 
+              className="add-manager-trigger-btn"
               onClick={() => setShowAddModal(true)}
               style={{ padding: '0.5rem 1rem', backgroundColor: 'var(--primary)', color: '#ffffff', border: 'none', borderRadius: 'var(--radius-md)', fontWeight: 700, cursor: 'pointer' }}
             >
-              Add Pre-Verified Manager
+              Add Manager
             </button>
           </div>
 
-          <div className="admin-users-table-wrapper" style={{ overflowX: 'auto' }}>
-            <table className="admin-users-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
               <thead>
-                <tr style={{ borderBottom: '2px solid var(--border-color)', fontSize: '0.8rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                <tr style={{ borderBottom: '2px solid var(--border-color)', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
                   <th style={{ padding: '0.75rem' }}>Full Name</th>
                   <th style={{ padding: '0.75rem' }}>Email</th>
                   <th style={{ padding: '0.75rem' }}>Role</th>
@@ -364,7 +421,7 @@ const Settings = () => {
               </thead>
               <tbody>
                 {users.map(u => (
-                  <tr key={u.id} style={{ borderBottom: '1px solid var(--border-color)', fontSize: '0.85rem' }}>
+                  <tr key={u.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                     <td style={{ padding: '0.75rem' }}>{u.full_name}</td>
                     <td style={{ padding: '0.75rem' }}>{u.email}</td>
                     <td style={{ padding: '0.75rem' }}>
@@ -374,11 +431,10 @@ const Settings = () => {
                     </td>
                     <td style={{ padding: '0.75rem' }}>{u.is_verified ? 'Yes' : 'No'}</td>
                     <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                      <button 
+                      <button
                         type="button"
-                        className="delete-user-btn" 
                         onClick={() => handleDeleteUser(u.id)}
-                        style={{ padding: '0.35rem 0.75rem', backgroundColor: 'var(--danger-light)', color: 'var(--danger)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontWeight: 600 }}
+                        style={{ padding: '0.35rem 0.75rem', backgroundColor: 'var(--danger-light)', color: 'var(--danger)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontWeight: 600 }}
                       >
                         Delete
                       </button>
@@ -391,77 +447,43 @@ const Settings = () => {
         </div>
       )}
 
-      {/* Add Manager Dialog Modal */}
+      {/* ─── Add Manager Modal ─────────────────────────────────────────────── */}
       {showAddModal && (
         <div className="modal-backdrop">
-          <div className="checkout-modal card glass-panel animate-fade-in" style={{ width: '400px', padding: '1.5rem' }}>
-            <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
+          <div className="checkout-modal card glass-panel animate-fade-in" style={{ width: '420px', padding: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
               <h3 style={{ fontWeight: 800 }}>Create Manager Account</h3>
-              <button 
-                type="button"
-                className="close-modal-btn" 
-                onClick={() => setShowAddModal(false)}
-                style={{ background: 'none', border: 'none', fontSize: '1.25rem', cursor: 'pointer', color: 'var(--text-muted)' }}
-              >
-                ×
-              </button>
+              <button type="button" onClick={() => setShowAddModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-muted)', lineHeight: 1 }}>×</button>
             </div>
 
-            <form onSubmit={handleAddManagerSubmit} className="checkout-form" style={{ display: 'flex', flexStack: 'column', gap: '1rem', flexDirection: 'column' }}>
+            <form onSubmit={handleAddManagerSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {modalError && (
-                <div className="error-alert-box" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--danger-light)', color: 'var(--danger)', padding: '0.65rem', borderRadius: 'var(--radius-md)', fontSize: '0.8rem', fontWeight: 600 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--danger-light)', color: 'var(--danger)', padding: '0.65rem', borderRadius: 'var(--radius-md)', fontSize: '0.8rem', fontWeight: 600 }}>
+                  <FiAlertCircle size={14} />
                   <span>{modalError}</span>
                 </div>
               )}
-
-              <div className="grp" style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>Full Name</label>
-                <input 
-                  type="text" 
-                  value={newMgrName} 
-                  onChange={e => setNewMgrName(e.target.value)} 
-                  required 
-                  style={{ width: '100%', padding: '0.65rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
-                />
-              </div>
-
-              <div className="grp" style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>Email Address</label>
-                <input 
-                  type="email" 
-                  value={newMgrEmail} 
-                  onChange={e => setNewMgrEmail(e.target.value)} 
-                  required 
-                  style={{ width: '100%', padding: '0.65rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
-                />
-              </div>
-
-              <div className="grp" style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>Phone Contact</label>
-                <input 
-                  type="text" 
-                  value={newMgrPhone} 
-                  onChange={e => setNewMgrPhone(e.target.value)} 
-                  required 
-                  style={{ width: '100%', padding: '0.65rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
-                />
-              </div>
-
-              <div className="grp" style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>Password (Min 8 characters)</label>
-                <input 
-                  type="password" 
-                  value={newMgrPass} 
-                  onChange={e => setNewMgrPass(e.target.value)} 
-                  required 
-                  style={{ width: '100%', padding: '0.65rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)' }}
-                />
-              </div>
-
-              <button 
-                type="submit" 
-                className="confirm-booking-btn"
-                style={{ width: '100%', padding: '0.75rem', backgroundColor: 'var(--primary)', color: '#ffffff', fontWeight: 700, border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}
+              {[
+                { label: 'Full Name', value: newMgrName, onChange: setNewMgrName, type: 'text', placeholder: 'e.g. Suhail Rather' },
+                { label: 'Email Address', value: newMgrEmail, onChange: setNewMgrEmail, type: 'email', placeholder: 'manager@panunghar.com' },
+                { label: 'Phone Contact', value: newMgrPhone, onChange: setNewMgrPhone, type: 'text', placeholder: '+91 98765 43210' },
+                { label: 'Password', value: newMgrPass, onChange: setNewMgrPass, type: 'password', placeholder: 'Min 8 chars...' },
+              ].map(({ label, value, onChange, type, placeholder }) => (
+                <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>{label}</label>
+                  <input
+                    type={type}
+                    value={value}
+                    onChange={e => onChange(e.target.value)}
+                    required
+                    placeholder={placeholder}
+                    style={{ width: '100%', padding: '0.65rem', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--bg-app)', color: 'var(--text-main)', boxSizing: 'border-box' }}
+                  />
+                </div>
+              ))}
+              <button
+                type="submit"
+                style={{ width: '100%', padding: '0.75rem', backgroundColor: 'var(--primary)', color: '#ffffff', fontWeight: 700, border: 'none', borderRadius: 'var(--radius-md)', cursor: 'pointer', marginTop: '0.5rem' }}
               >
                 Create Verified Manager
               </button>

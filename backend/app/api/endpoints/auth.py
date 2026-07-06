@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.database.session import get_db
 from app.models.models import User, OTPVerification, PasswordReset, ActivityLog
-from app.schemas.schemas import UserCreate, UserResponse, OTPVerify, Token, PasswordResetRequest, PasswordResetConfirm, PasswordChangeRequest
+from app.schemas.schemas import UserCreate, UserResponse, OTPVerify, Token, PasswordResetRequest, PasswordResetConfirm, PasswordChangeRequest, ProfileUpdateRequest
 from app.utils.security import verify_password, get_password_hash
 from app.utils.jwt import create_access_token, create_refresh_token, decode_token
 from app.config.config import settings
@@ -320,3 +320,32 @@ def change_password(
     
     return {"message": "Password changed successfully."}
 
+
+@router.put("/update-profile", status_code=status.HTTP_200_OK)
+def update_profile(
+    req: ProfileUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Update the authenticated user's full name and phone number."""
+    if req.full_name is not None:
+        current_user.full_name = req.full_name.strip()
+    if req.phone is not None:
+        current_user.phone = req.phone.strip()
+
+    log = ActivityLog(
+        user_id=current_user.id,
+        action="Profile Updated",
+        details=f"User updated profile name/phone."
+    )
+    db.add(log)
+    db.commit()
+    db.refresh(current_user)
+
+    return {
+        "message": "Profile updated successfully.",
+        "full_name": current_user.full_name,
+        "phone": current_user.phone,
+        "email": current_user.email,
+        "role": current_user.role_name
+    }

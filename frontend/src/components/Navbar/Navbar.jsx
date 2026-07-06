@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDashboard } from '../../context/DashboardContext';
 import { 
   FiMenu, 
@@ -38,6 +38,19 @@ const Navbar = () => {
   const handleLangChange = (e) => {
     setLanguage(e.target.value);
   };
+
+  // React to profile updates saved from Settings page
+  const [displayName, setDisplayName] = useState(localStorage.getItem('user_name') || 'Resort Admin');
+  const [displayRole, setDisplayRole] = useState(localStorage.getItem('user_role') || 'Admin');
+
+  useEffect(() => {
+    const handleStorageUpdate = () => {
+      setDisplayName(localStorage.getItem('user_name') || 'Resort Admin');
+      setDisplayRole(localStorage.getItem('user_role') || 'Admin');
+    };
+    window.addEventListener('storage', handleStorageUpdate);
+    return () => window.removeEventListener('storage', handleStorageUpdate);
+  }, []);
 
   return (
     <header className="navbar glass-panel">
@@ -119,8 +132,8 @@ const Navbar = () => {
         {/* User Profile */}
         <div className="navbar-profile">
           <div className="profile-info">
-            <span className="profile-name">{localStorage.getItem('user_name') || 'Resort Admin'}</span>
-            <span className="profile-role">{localStorage.getItem('user_role') || 'Admin'}</span>
+            <span className="profile-name">{displayName}</span>
+            <span className="profile-role">{displayRole}</span>
           </div>
           <div className="profile-avatar">
             <FiUser size={18} />

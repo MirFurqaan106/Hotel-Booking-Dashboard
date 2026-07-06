@@ -153,6 +153,7 @@ const printInvoice = (b) => {
 /* ─── Booking Detail Modal ───────────────────────────────────────────── */
 const BookingDetailModal = ({ booking, onClose, onDelete }) => {
   if (!booking) return null;
+  const { loadLiveBookings } = useDashboard();
   const role = localStorage.getItem('user_role');
   const nights = Math.max(1, Math.round(
     (new Date(booking.CheckOut) - new Date(booking.CheckIn)) / (1000 * 60 * 60 * 24)
@@ -160,11 +161,55 @@ const BookingDetailModal = ({ booking, onClose, onDelete }) => {
   const paid = booking._raw?.paid_amount ?? 0;
   const remaining = booking.Revenue - paid;
 
+  // Manual payment state
+  const [payAmount, setPayAmount] = useState('');
+  const [payMethod, setPayMethod] = useState('Cash');
+  const [payNote, setPayNote] = useState('');
+  const [loadingPayment, setLoadingPayment] = useState(false);
+  const [loadingReminder, setLoadingReminder] = useState(false);
+
+  const handleRecordPayment = async (e) => {
+    e.preventDefault();
+    if (!payAmount || parseFloat(payAmount) <= 0) return;
+    setLoadingPayment(true);
+    try {
+      const rawId = booking._raw?.id || booking.BookingID.replace('HB-', '');
+      await api.post('/payments/manual-record', {
+        booking_id: parseInt(rawId),
+        amount: parseInt(payAmount),
+        method: payMethod,
+        note: payNote
+      });
+      alert('Offline payment registered successfully!');
+      setPayAmount('');
+      setPayNote('');
+      loadLiveBookings();
+      onClose();
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Failed to record manual payment.');
+    } finally {
+      setLoadingPayment(false);
+    }
+  };
+
+  const handleSendReminder = async () => {
+    setLoadingReminder(true);
+    try {
+      const rawId = booking._raw?.id || booking.BookingID.replace('HB-', '');
+      await api.post(`/payments/send-reminder/${rawId}`);
+      alert('Payment reminder email sent successfully to the guest!');
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Failed to send payment reminder.');
+    } finally {
+      setLoadingReminder(false);
+    }
+  };
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div
         className="booking-modal card glass-panel animate-fade-in"
-        style={{ maxWidth: '560px', width: '95%' }}
+        style={{ maxWidth: '600px', width: '95%', maxHeight: '95vh', overflowY: 'auto' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -199,6 +244,58 @@ const BookingDetailModal = ({ booking, onClose, onDelete }) => {
             </div>
           ))}
         </div>
+
+        {/* Manager/Admin Payment Controls */}
+        {(role === 'Admin' || role === 'Manager') && remaining > 0 && (
+          <div style={{ borderTop: '1px dashed var(--border-color)', paddingTop: '1rem', marginBottom: '1.25rem' }}>
+            <h4 style={{ margin: '0 0 0.75rem', fontSize: '0.9rem', color: 'var(--primary)', fontWeight: 700 }}>Record Desk Payment / Reminders</h4>
+            
+            <form onSubmit={handleRecordPayment} style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end', background: 'rgba(79,70,229,0.05)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '0.75rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: '1 1 120px' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>Amount (₹)</label>
+                <input
+                  type="number"
+                  placeholder={`Max ₹${remaining}`}
+                  max={remaining}
+                  min={1}
+                  value={payAmount}
+                  onChange={e => setPayAmount(e.target.value)}
+                  required
+                  style={{ padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', outline: 'none', background: 'var(--bg-app)', color: 'var(--text-main)', fontSize: '0.85rem' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: '1 1 100px' }}>
+                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>Method</label>
+                <select
+                  value={payMethod}
+                  onChange={e => setPayMethod(e.target.value)}
+                  style={{ padding: '0.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', outline: 'none', background: 'var(--bg-app)', color: 'var(--text-main)', fontSize: '0.85rem' }}
+                >
+                  <option value="Cash">Cash</option>
+                  <option value="Card">Card</option>
+                  <option value="UPI">UPI</option>
+                </select>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loadingPayment}
+                style={{ padding: '0.55rem 1rem', background: 'var(--success)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', fontWeight: 700, cursor: 'pointer', fontSize: '0.82rem' }}
+              >
+                {loadingPayment ? 'Saving...' : 'Record Pay'}
+              </button>
+            </form>
+
+            <button
+              onClick={handleSendReminder}
+              disabled={loadingReminder}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.55rem 1rem', background: 'var(--warning-light)', color: 'var(--warning)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 'var(--radius-md)', fontWeight: 700, cursor: 'pointer', fontSize: '0.82rem', width: '100%', justifyContent: 'center' }}
+            >
+              📩 {loadingReminder ? 'Sending Reminder...' : 'Send Outstanding Payment Reminder Email'}
+            </button>
+          </div>
+        )}
 
         {/* Actions */}
         <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>

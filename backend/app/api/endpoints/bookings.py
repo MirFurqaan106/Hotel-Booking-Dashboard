@@ -142,12 +142,8 @@ def get_all_bookings(
     db: Session = Depends(get_db),
     current_user: User = Depends(RoleChecker(["Manager", "Admin"]))
 ):
-    if current_user.role_name == "Admin":
-        return db.query(Booking).all()
-    
-    # Manager: fetch bookings for rooms belonging to hotels managed by current_user
-    from app.models.models import Room, Hotel
-    return db.query(Booking).join(Room).join(Hotel).filter(Hotel.manager_id == current_user.id).all()
+    # Both Admin and Manager see all bookings for the single Panun Ghar hotel
+    return db.query(Booking).all()
 
 
 @router.get("/my", response_model=List[BookingResponse])

@@ -126,7 +126,7 @@ class BookingCreate(BookingBase):
 class BookingResponse(BaseModel):
     id: int
     booking_code: str
-    user_id: int
+    user_id: Optional[int] = None
     room_id: int
     check_in: date
     check_out: date
@@ -163,6 +163,18 @@ class PaymentResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ManualPaymentRecord(BaseModel):
+    booking_id: int
+    amount: int
+    method: str = "Cash"  # Cash, Card, UPI, Cheque
+    note: Optional[str] = None
+
+
+class PaymentReminderRequest(BaseModel):
+    booking_id: int
+    message: Optional[str] = None
 
 # ==========================================
 # REVIEW SCHEMAS

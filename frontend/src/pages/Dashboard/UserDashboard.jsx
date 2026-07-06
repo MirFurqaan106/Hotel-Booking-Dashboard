@@ -86,6 +86,54 @@ const UserDashboard = () => {
     }
   };
 
+  const handlePayRemaining = async (booking) => {
+    const outstanding = booking.total_amount - booking.paid_amount;
+    if (outstanding <= 0) return;
+    
+    try {
+      // 1. Create Razorpay order for remaining balance
+      const orderRes = await api.post(`/payments/create-order?booking_id=${booking.id}`);
+      const orderData = orderRes.data;
+
+      // 2. Open Razorpay checkout
+      const options = {
+        key: orderData.key_id,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "Panun Ghar Resort",
+        description: `Settle Balance Due for Stay (${booking.booking_code})`,
+        order_id: orderData.order_id,
+        handler: async function (response) {
+          try {
+            await api.post('/payments/verify-signature', {
+              booking_id: booking.id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature
+            });
+            setToastMsg("Payment verified! Balance settled successfully.");
+            fetchDashboardData();
+            setTimeout(() => setToastMsg(''), 4000);
+          } catch (err) {
+            alert(err.response?.data?.detail || "Payment verification failed.");
+          }
+        },
+        prefill: {
+          name: localStorage.getItem('user_name') || "Resort Guest",
+          email: localStorage.getItem('user_email') || "guest@panunghar.com"
+        },
+        theme: {
+          color: "#4f46e5"
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      alert(err.response?.data?.detail || "Could not initialize payment window.");
+    }
+  };
+
   const handleChangePasswordSubmit = async (e) => {
     e.preventDefault();
     setPasswordError('');
@@ -116,6 +164,7 @@ const UserDashboard = () => {
       setPasswordError(err.response?.data?.detail || "Error changing password. Ensure current password is correct.");
     }
   };
+
 
   const printInvoice = (booking) => {
     const printWindow = window.open('', '_blank');
@@ -259,6 +308,17 @@ const UserDashboard = () => {
                           <span>Print Invoice</span>
                         </button>
                         
+                        {booking.total_amount - booking.paid_amount > 0 && booking.booking_status !== 'Cancelled' && (
+                          <button
+                            className="dash-act-btn pay-btn"
+                            style={{ background: 'var(--success-light)', color: 'var(--success)', border: '1px solid rgba(16,185,129,0.3)', fontWeight: 700 }}
+                            onClick={() => handlePayRemaining(booking)}
+                          >
+                            <FiDollarSign size={14} />
+                            <span>Pay Balance (₹{booking.total_amount - booking.paid_amount})</span>
+                          </button>
+                        )}
+
                         {booking.booking_status === 'Checked Out' && (
                           <button className="dash-act-btn review-btn" onClick={() => setSelectedBookingForReview(booking)}>
                             <FiStar size={14} />

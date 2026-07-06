@@ -167,49 +167,117 @@ const UserDashboard = () => {
 
 
   const printInvoice = (booking) => {
+    const nights = Math.max(1, Math.round(
+      (new Date(booking.check_out) - new Date(booking.check_in)) / (1000 * 60 * 60 * 24)
+    ));
+    const paid = booking.paid_amount ?? 0;
+    const remaining = booking.total_amount - paid;
+    const pricePerNight = Math.round(booking.total_amount / nights);
+    const invoiceNo = `INV-${booking.booking_code.replace('HB-', '')}-${new Date().getFullYear()}`;
+    const today = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const payStatus = remaining <= 0 ? 'PAID' : (paid > 0 ? 'PARTIAL' : 'PENDING');
+
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
+      <!DOCTYPE html>
       <html>
         <head>
           <title>Invoice - ${booking.booking_code}</title>
           <style>
-            body { font-family: monospace; padding: 40px; color: #333; line-height: 1.5; }
-            h2 { border-bottom: 2px solid #000; padding-bottom: 10px; }
-            .details { margin: 20px 0; }
-            .item { display: flex; justify-content: space-between; margin-bottom: 10px; }
-            .footer { border-top: 1px dashed #999; margin-top: 30px; padding-top: 20px; text-align: center; }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 40px; color: #1a1a2e; background: #fff; }
+            .inv-container { max-width: 650px; margin: 0 auto; }
+            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #4f46e5; padding-bottom: 20px; margin-bottom: 20px; }
+            .logo-sec h1 { margin: 0; font-size: 1.5rem; color: #4f46e5; font-weight: 800; }
+            .logo-sec p { margin: 2px 0 0; font-size: 0.8rem; color: #6b7280; }
+            .meta-sec { text-align: right; font-size: 0.85rem; }
+            .meta-sec h2 { margin: 0 0 5px; font-size: 1.4rem; color: #1a1a2e; }
+            .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
+            .badge-paid { background: #d1fae5; color: #065f46; }
+            .badge-pending { background: #fef3c7; color: #92400e; }
+            .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; font-size: 0.85rem; }
+            .details-col h3 { margin: 0 0 8px; font-size: 0.75rem; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px; }
+            .details-col p { margin: 3px 0; color: #374151; }
+            .table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 0.85rem; }
+            .table th { background: #4f46e5; color: #fff; text-align: left; padding: 10px; font-weight: 600; }
+            .table td { padding: 10px; border-bottom: 1px solid #e5e7eb; }
+            .totals-sec { margin-left: auto; width: 250px; font-size: 0.85rem; }
+            .totals-row { display: flex; justify-content: space-between; padding: 5px 0; }
+            .totals-row.grand { border-top: 2px solid #4f46e5; margin-top: 5px; padding-top: 8px; font-size: 1rem; font-weight: 800; color: #4f46e5; }
+            .footer { border-top: 1px solid #e5e7eb; margin-top: 40px; padding-top: 20px; text-align: center; font-size: 0.78rem; color: #9ca3af; }
           </style>
         </head>
         <body>
-          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 25px; border-bottom: 2px solid #1e3a8a; padding-bottom: 15px;">
-            <div style="width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #06b6d4); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; font-family: sans-serif; line-height: 46px; text-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center;">P</div>
-            <div>
-              <h2 style="margin: 0; color: #1e3a8a; font-size: 20px; font-weight: 800; border: none; padding: 0;">PANUN GHAR LUXURY RESORT</h2>
-              <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #6b7280; font-weight: 600; display: block; margin-top: 2px;">Srinagar, Kashmir</span>
+          <div class="inv-container">
+            <div class="header">
+              <div class="logo-sec">
+                <h1>Panun Ghar Resort</h1>
+                <p>Dal Lake, Srinagar, Kashmir</p>
+              </div>
+              <div class="meta-sec">
+                <h2>INVOICE</h2>
+                <p><strong>${invoiceNo}</strong></p>
+                <p>Date: ${today}</p>
+                <p>Booking Ref: ${booking.booking_code}</p>
+                <p><span class="badge ${remaining <= 0 ? 'badge-paid' : 'badge-pending'}">${payStatus}</span></p>
+              </div>
             </div>
-          </div>
-          <div class="details">
-            <p><strong>Booking Code:</strong> ${booking.booking_code}</p>
-            <p><strong>Check-In:</strong> ${booking.check_in}</p>
-            <p><strong>Check-Out:</strong> ${booking.check_out}</p>
-            <p><strong>Status:</strong> ${booking.booking_status}</p>
-          </div>
-          <hr style="border: none; border-top: 1px dashed #ccc; margin: 20px 0;" />
-          <div class="item">
-            <span>Room Reservation Fee</span>
-            <span>₹${booking.total_amount}</span>
-          </div>
-          <div class="item">
-            <span>Amount Paid</span>
-            <span>₹${booking.paid_amount}</span>
-          </div>
-          <div class="item" style="font-weight: bold; font-size: 1.1em;">
-            <span>Outstanding Balance</span>
-            <span>₹${booking.total_amount - booking.paid_amount}</span>
-          </div>
-          <div class="footer">
-            <p>Thank you for choosing Panun Ghar, Kashmir.</p>
-            <p>Customer Support: +91 7889984798</p>
+
+            <div class="details-grid">
+              <div class="details-col">
+                <h3>Stay Details</h3>
+                <p>Room: <strong>${booking.room ? booking.room.room_type : 'Deluxe Suite'} (Room ${booking.room ? booking.room.room_number : '101'})</strong></p>
+                <p>Check-In: <strong>${booking.check_in}</strong></p>
+                <p>Check-Out: <strong>${booking.check_out}</strong></p>
+                <p>Duration: <strong>${nights} Night${nights > 1 ? 's' : ''}</strong></p>
+              </div>
+              <div class="details-col">
+                <h3>Payment Gateway</h3>
+                <p>Method: <strong>${booking.payment_option === 'Later' ? 'Pay At Desk' : booking.payment_option}</strong></p>
+                <p>Portal: <strong>Razorpay Secured</strong></p>
+              </div>
+            </div>
+
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th>Rate</th>
+                  <th>Nights</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Stay Reservation - Room ${booking.room ? booking.room.room_number : '101'}</td>
+                  <td>₹${pricePerNight.toLocaleString('en-IN')}</td>
+                  <td>${nights}</td>
+                  <td>₹${booking.total_amount.toLocaleString('en-IN')}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="totals-sec">
+              <div class="totals-row">
+                <span>Subtotal:</span>
+                <span>₹${booking.total_amount.toLocaleString('en-IN')}</span>
+              </div>
+              <div class="totals-row">
+                <span style="color: #059669; font-weight: 600;">Amount Paid:</span>
+                <span style="color: #059669; font-weight: 600;">₹${paid.toLocaleString('en-IN')}</span>
+              </div>
+              <div class="totals-row">
+                <span style="color: #dc2626; font-weight: 600;">Balance Due (Pending):</span>
+                <span style="color: #dc2626; font-weight: 600;">₹${remaining.toLocaleString('en-IN')}</span>
+              </div>
+              <div class="totals-row grand">
+                <span>Grand Total:</span>
+                <span>₹${booking.total_amount.toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+
+            <div class="footer">
+              <p>Thank you for staying at Panun Ghar Resort. For queries, contact info@panunghar.com</p>
+            </div>
           </div>
         </body>
       </html>

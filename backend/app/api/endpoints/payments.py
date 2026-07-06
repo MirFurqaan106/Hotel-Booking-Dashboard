@@ -151,15 +151,21 @@ def verify_razorpay_signature(
     
     # 6. Dispatch Confirmation Email
     try:
-        subject = f"[Panun Ghar] Booking Confirmed / Payment Success: {booking.booking_code}"
-        body_text = f"Payment of ₹{amount_in_rupees} received successfully via Razorpay. Reservation {booking.booking_code} status updated."
+        rem = booking.total_amount - booking.paid_amount
+        subject = f"[Panun Ghar] Booking Payment Verified: {booking.booking_code}"
+        body_text = f"Payment of ₹{amount_in_rupees} verified via Razorpay. Total Paid: ₹{booking.paid_amount} / ₹{booking.total_amount}. Balance Due: ₹{rem}."
         body_html = f"""
         <html>
-            <body>
-                <h2 style="color: #2563eb;">Payment Success & Booking Confirmed!</h2>
+            <body style="font-family: Arial, sans-serif; color: #1a1a2e; padding: 20px;">
+                <h2 style="color: #4f46e5;">Payment Success & Booking Confirmed!</h2>
                 <p>Hello {current_user.full_name}, we have received your payment of <strong>₹{amount_in_rupees}</strong>.</p>
-                <p><strong>Booking Ref:</strong> {booking.booking_code}<br/>
-                   <strong>Transaction ID:</strong> {verification.razorpay_payment_id}</p>
+                <div style="background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                    <p style="margin: 4px 0;"><strong>Booking Ref:</strong> {booking.booking_code}</p>
+                    <p style="margin: 4px 0;"><strong>Transaction ID:</strong> {verification.razorpay_payment_id}</p>
+                    <p style="margin: 4px 0;"><strong>Total Reservation Fee:</strong> ₹{booking.total_amount}</p>
+                    <p style="margin: 4px 0; color: #059669;"><strong>Total Amount Paid:</strong> ₹{booking.paid_amount}</p>
+                    <p style="margin: 4px 0; color: #dc2626;"><strong>Remaining Outstanding Balance:</strong> ₹{rem}</p>
+                </div>
                 <p>Enjoy your stay at Panun Ghar Resort, Srinagar!</p>
             </body>
         </html>
@@ -220,15 +226,21 @@ def verify_payment(
     
     # 5. Dispatch Confirmation email
     if payment_in.payment_status == "Success":
-        subject = f"[Panun Ghar] Booking Confirmed: {booking.booking_code}"
-        body_text = f"Payment of ₹{payment_in.amount} received successfully. Reservation {booking.booking_code} is Confirmed!"
+        rem = booking.total_amount - booking.paid_amount
+        subject = f"[Panun Ghar] Booking Payment Verified: {booking.booking_code}"
+        body_text = f"Payment of ₹{payment_in.amount} received. Total Paid: ₹{booking.paid_amount} / ₹{booking.total_amount}. Balance Due: ₹{rem}."
         body_html = f"""
         <html>
-            <body>
-                <h2 style="color: #2563eb;">Payment Success & Booking Confirmed!</h2>
+            <body style="font-family: Arial, sans-serif; color: #1a1a2e; padding: 20px;">
+                <h2 style="color: #4f46e5;">Payment Success & Booking Updated</h2>
                 <p>Hello {current_user.full_name}, we have received your payment of <strong>₹{payment_in.amount}</strong>.</p>
-                <p><strong>Booking Ref:</strong> {booking.booking_code}<br/>
-                   <strong>Transaction ID:</strong> {payment_in.transaction_id}</p>
+                <div style="background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin: 15px 0;">
+                    <p style="margin: 4px 0;"><strong>Booking Ref:</strong> {booking.booking_code}</p>
+                    <p style="margin: 4px 0;"><strong>Transaction ID:</strong> {payment_in.transaction_id}</p>
+                    <p style="margin: 4px 0;"><strong>Total Reservation Fee:</strong> ₹{booking.total_amount}</p>
+                    <p style="margin: 4px 0; color: #059669;"><strong>Total Amount Paid:</strong> ₹{booking.paid_amount}</p>
+                    <p style="margin: 4px 0; color: #dc2626;"><strong>Remaining Outstanding Balance:</strong> ₹{rem}</p>
+                </div>
                 <p>Enjoy your stay at Panun Ghar Resort, Srinagar!</p>
             </body>
         </html>

@@ -147,7 +147,7 @@ input[type="date"] {
   color-scheme: dark;
 }
 input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(var(--calendar-invert-val, 0));
+  filter: invert(1) brightness(100%) !important;
   cursor: pointer;
 }
 [data-theme='dark'] {

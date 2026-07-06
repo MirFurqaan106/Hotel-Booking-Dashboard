@@ -86,16 +86,38 @@ const UserDashboard = () => {
     }
   };
 
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const handlePayRemaining = async (booking) => {
     const outstanding = booking.total_amount - booking.paid_amount;
     if (outstanding <= 0) return;
     
     try {
-      // 1. Create Razorpay order for remaining balance
+      // 1. Load Razorpay script
+      const isLoaded = await loadRazorpayScript();
+      if (!isLoaded) {
+        alert("Failed to load Razorpay SDK. Check your internet connection.");
+        return;
+      }
+
+      // 2. Create Razorpay order for remaining balance
       const orderRes = await api.post(`/payments/create-order?booking_id=${booking.id}`);
       const orderData = orderRes.data;
 
-      // 2. Open Razorpay checkout
+      // 3. Open Razorpay checkout
       const options = {
         key: orderData.key_id,
         amount: orderData.amount,

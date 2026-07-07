@@ -19,7 +19,11 @@ def generate_otp() -> str:
     return str(random.randint(100000, 999999))
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
-def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
+def register_user(
+    user_in: UserCreate, 
+    background_tasks: BackgroundTasks, 
+    db: Session = Depends(get_db)
+):
     # 0. Role and Password Strength validations
     if user_in.role_name in ["Manager", "Admin"]:
         raise HTTPException(
@@ -77,14 +81,18 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
     
-    # 5. Dispatch OTP Notification
-    EmailService.send_otp(user_in.email, otp_code)
+    # Send email in background to prevent blocking registration requests
+    background_tasks.add_task(EmailService.send_otp, user_in.email, otp_code)
     
     return new_user
 
 
 @router.post("/verify-otp", status_code=status.HTTP_200_OK)
-def verify_otp(verify_in: OTPVerify, db: Session = Depends(get_db)):
+def verify_otp(
+    verify_in: OTPVerify, 
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
     # 1. Retrieve valid OTP record
     otp_record = db.query(OTPVerification).filter(
         OTPVerification.email == verify_in.email,
@@ -121,8 +129,8 @@ def verify_otp(verify_in: OTPVerify, db: Session = Depends(get_db)):
     
     db.commit()
     
-    # Send welcome email
-    EmailService.send_welcome(user.email, user.full_name)
+    # Send welcome email asynchronously
+    background_tasks.add_task(EmailService.send_welcome, user.email, user.full_name)
     
     return {"message": "Email verified successfully. You can now login."}
 

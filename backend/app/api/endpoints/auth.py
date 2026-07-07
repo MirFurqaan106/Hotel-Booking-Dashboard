@@ -1,6 +1,6 @@
 import random
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -216,8 +216,6 @@ def refresh_token(refresh_token_str: str, db: Session = Depends(get_db)):
         "token_type": "bearer"
     }
 
-
-from fastapi import BackgroundTasks
 
 @router.post("/forgot-password", status_code=status.HTTP_200_OK)
 def forgot_password(

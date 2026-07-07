@@ -43,6 +43,16 @@ def check_availability(
     return {"available": not is_overlapping}
 
 
+@router.post("/trigger-live-seed")
+def trigger_live_seed():
+    try:
+        from seed import seed_database
+        seed_database()
+        return {"status": "Success", "detail": "Database seeded successfully!"}
+    except Exception as e:
+        return {"status": "Failed", "detail": str(e)}
+
+
 @router.post("", response_model=BookingResponse, status_code=status.HTTP_201_CREATED)
 def create_booking(
     booking_in: BookingCreate,

@@ -17,29 +17,31 @@ class EmailService:
             print(f"Body (Text Preview):\n{body_text.encode('ascii', 'replace').decode('ascii') if body_text else 'HTML email payload'}")
         print(f"==========================================\n")
         
-        # 1. If Resend API Key is configured, use the HTTP API directly to bypass firewall blockages
-        if settings.RESEND_API_KEY:
+        # 1. If BREVO_API_KEY / SENDINBLUE API Key is configured, use the Brevo HTTP API directly.
+        # This allows sending emails to ANY recipient in the world without domain verification restrictions.
+        brevo_key = settings.RESEND_API_KEY  # We will reuse the same env variable name or check settings
+        if brevo_key:
             try:
-                import resend
-                resend.api_key = settings.RESEND_API_KEY
-                
-                # Note: Resend's free tier sandbox requires sending from onboarding@resend.dev to verified emails
-                from_email = "onboarding@resend.dev"
-                
-                params = {
-                    "from": f"Panun Ghar Resort <{from_email}>",
-                    "to": [to_email],
-                    "subject": subject,
-                    "html": body_html
+                import requests
+                headers = {
+                    "accept": "application/json",
+                    "api-key": brevo_key,
+                    "content-type": "application/json"
                 }
-                if body_text:
-                    params["text"] = body_text
-                    
-                resend.Emails.send(params)
-                print("[Email Service] Production email successfully sent via Resend HTTP API!")
-                return True
-            except Exception as resend_err:
-                print(f"[Email Service] Resend HTTP API dispatch failed: {resend_err}. Falling back to SMTP...")
+                payload = {
+                    "sender": {"name": "Panun Ghar Luxury Resort", "email": "mirfurkaan106@gmail.com"},
+                    "to": [{"email": to_email}],
+                    "subject": subject,
+                    "htmlContent": body_html
+                }
+                res = requests.post("https://api.brevo.com/v3/smtp/email", json=payload, headers=headers, timeout=10)
+                if res.status_code in [200, 201, 202]:
+                    print("[Email Service] Production email successfully sent via Brevo HTTP API to any guest!")
+                    return True
+                else:
+                    print(f"[Email Service] Brevo HTTP API rejected request: {res.status_code} - {res.text}. Falling back...")
+            except Exception as brevo_err:
+                print(f"[Email Service] Brevo HTTP API dispatch failed: {brevo_err}. Falling back to SMTP...")
 
         # If no SMTP credentials are provided, mock the success return
         if not settings.SMTP_USER or not settings.SMTP_PASSWORD:

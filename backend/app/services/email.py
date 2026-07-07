@@ -22,28 +22,38 @@ class EmailService:
             print("[Email Service] SMTP Credentials missing in .env. Mocking dispatch SUCCESS (details printed above).")
             return True
             
+        # Try TLS port 587 first, and fallback to SMTP_SSL port 465 if blocked
         try:
             message = MIMEMultipart("alternative")
             message["Subject"] = subject
             message["From"] = settings.SMTP_SENDER_EMAIL
             message["To"] = to_email
             
-            # Attach text and HTML versions
             if body_text:
                 message.attach(MIMEText(body_text, "plain"))
             message.attach(MIMEText(body_html, "html"))
             
-            # Connect to SMTP server with a 10s timeout to prevent hanging threads
-            server = smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10)
-            server.starttls()
-            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-            server.sendmail(settings.SMTP_SENDER_EMAIL, to_email, message.as_string())
-            server.quit()
-            
-            print("[Email Service] Email sent successfully via Gmail SMTP!")
-            return True
+            # 1. Attempt standard TLS connection (Port 587)
+            try:
+                server = smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10)
+                server.starttls()
+                server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                server.sendmail(settings.SMTP_SENDER_EMAIL, to_email, message.as_string())
+                server.quit()
+                print("[Email Service] Email sent successfully via TLS (Port 587)!")
+                return True
+            except Exception as tls_err:
+                print(f"[Email Service] TLS connection failed/blocked: {tls_err}. Retrying with SSL (Port 465)...")
+                
+                # 2. Fallback to secure SSL connection (Port 465)
+                server = smtplib.SMTP_SSL(settings.SMTP_HOST, 465, timeout=10)
+                server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                server.sendmail(settings.SMTP_SENDER_EMAIL, to_email, message.as_string())
+                server.quit()
+                print("[Email Service] Email sent successfully via SSL (Port 465)!")
+                return True
         except Exception as e:
-            print(f"[Email Service] Error sending email via SMTP: {e}")
+            print(f"[Email Service] Both TLS and SSL email dispatch failed: {e}")
             return False
 
     @classmethod

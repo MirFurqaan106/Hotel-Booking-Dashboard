@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  baseURL: import.meta.env.VITE_API_URL || 'https://hotel-booking-dashboard-bnwp.onrender.com',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -33,7 +33,7 @@ api.interceptors.response.use(
       if (refreshToken) {
         try {
           // Request new tokens from refresh route
-          const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+          const baseUrl = import.meta.env.VITE_API_URL || 'https://hotel-booking-dashboard-bnwp.onrender.com';
           const res = await axios.post(`${baseUrl}/auth/refresh?refresh_token_str=${refreshToken}`);
           
           if (res.status === 200) {

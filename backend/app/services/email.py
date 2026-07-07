@@ -33,8 +33,8 @@ class EmailService:
                 message.attach(MIMEText(body_text, "plain"))
             message.attach(MIMEText(body_html, "html"))
             
-            # Connect to SMTP server
-            server = smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT)
+            # Connect to SMTP server with a 10s timeout to prevent hanging threads
+            server = smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=10)
             server.starttls()
             server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
             server.sendmail(settings.SMTP_SENDER_EMAIL, to_email, message.as_string())

@@ -209,13 +209,19 @@ def refresh_token(refresh_token_str: str, db: Session = Depends(get_db)):
     }
 
 
+from fastapi import BackgroundTasks
+
 @router.post("/forgot-password", status_code=status.HTTP_200_OK)
-def forgot_password(req: PasswordResetRequest, db: Session = Depends(get_db)):
+def forgot_password(
+    req: PasswordResetRequest, 
+    background_tasks: BackgroundTasks, 
+    db: Session = Depends(get_db)
+):
     # 1. Check if user exists
     user = db.query(User).filter(User.email == req.email).first()
     if not user:
-        # Prevent user enumeration security leakage: return successful status even if user doesn't exist
-        return {"message": "If the email is registered, a password reset link will be sent."}
+        # Prevent user enumeration security leakage
+        return {"message": "If the email is registered, a password reset token will be sent."}
         
     # 2. Generate random 6-character token
     token_code = str(random.randint(100000, 999999))
@@ -236,8 +242,8 @@ def forgot_password(req: PasswordResetRequest, db: Session = Depends(get_db)):
     db.add(log)
     db.commit()
     
-    # Send email
-    EmailService.send_password_reset(user.email, token_code)
+    # Send email in background to prevent hanging request threads
+    background_tasks.add_task(EmailService.send_password_reset, user.email, token_code)
     
     return {"message": "If the email is registered, a password reset token will be sent."}
 

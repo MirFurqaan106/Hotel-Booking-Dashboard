@@ -34,6 +34,9 @@ class Settings:
     SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
     SMTP_SENDER_EMAIL: str = os.getenv("SMTP_SENDER_EMAIL", "mirfurkaan106@gmail.com")
     
+    # Resend Production HTTP Email API key configuration
+    RESEND_API_KEY: str = os.getenv("RESEND_API_KEY", "")
+    
     # Razorpay Developer API credentials
     RAZORPAY_KEY_ID: str = os.getenv("RAZORPAY_KEY_ID", "rzp_test_yourKeyIdHere")
     RAZORPAY_KEY_SECRET: str = os.getenv("RAZORPAY_KEY_SECRET", "yourKeySecretHere")

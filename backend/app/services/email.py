@@ -17,6 +17,30 @@ class EmailService:
             print(f"Body (Text Preview):\n{body_text.encode('ascii', 'replace').decode('ascii') if body_text else 'HTML email payload'}")
         print(f"==========================================\n")
         
+        # 1. If Resend API Key is configured, use the HTTP API directly to bypass firewall blockages
+        if settings.RESEND_API_KEY:
+            try:
+                import resend
+                resend.api_key = settings.RESEND_API_KEY
+                
+                # Note: Resend's free tier sandbox requires sending from onboarding@resend.dev to verified emails
+                from_email = "onboarding@resend.dev"
+                
+                params = {
+                    "from": f"Panun Ghar Resort <{from_email}>",
+                    "to": [to_email],
+                    "subject": subject,
+                    "html": body_html
+                }
+                if body_text:
+                    params["text"] = body_text
+                    
+                resend.Emails.send(params)
+                print("[Email Service] Production email successfully sent via Resend HTTP API!")
+                return True
+            except Exception as resend_err:
+                print(f"[Email Service] Resend HTTP API dispatch failed: {resend_err}. Falling back to SMTP...")
+
         # If no SMTP credentials are provided, mock the success return
         if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
             print("[Email Service] SMTP Credentials missing in .env. Mocking dispatch SUCCESS (details printed above).")

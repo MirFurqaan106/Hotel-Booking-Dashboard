@@ -10,14 +10,15 @@ load_dotenv(dotenv_path=env_path)
 class Settings:
     PROJECT_NAME: str = "Panun Ghar Booking Engine"
     
-    # Database - resolve absolute path relative to BASE_DIR if using SQLite
-    DATABASE_URL: str = os.getenv("DATABASE_URL") or f"sqlite:///{BASE_DIR}/hotel_booking.db"
+    # Database - force absolute path inside the backend folder for SQLite
+    DATABASE_URL: str = os.getenv("DATABASE_URL") or ""
     
     def __init__(self):
-        if self.DATABASE_URL.startswith("sqlite:///."):
-            # Convert relative SQLite URLs to absolute based on project root directory
-            rel_path = self.DATABASE_URL.replace("sqlite:///.", "")
-            self.DATABASE_URL = f"sqlite:///{BASE_DIR}/{rel_path}"
+        # If DATABASE_URL is not set or is a relative sqlite URL, force absolute path inside the backend folder
+        if not self.DATABASE_URL or self.DATABASE_URL.startswith("sqlite:///.") or "hotel_booking.db" in self.DATABASE_URL:
+            # Force sqlite absolute path inside the backend directory
+            backend_dir = Path(__file__).resolve().parent.parent.parent
+            self.DATABASE_URL = f"sqlite:///{backend_dir}/hotel_booking.db"
     
     # JWT Auth
     JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "9a6e1dc285e68334468f7663e26bbbb6c128c11aa2319208a0d0a0b0c0d0e0f0")
